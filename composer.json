@@ -1,0 +1,14 @@
+{
+    "autoload": {
+        "psr-4": {
+            "MyApp\\": "src"
+        }
+    },
+    "require": {
+        "cboden/ratchet": "^0.3.5",
+        "ratchet/pawl": "^0.2.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^5"
+    }
+}
