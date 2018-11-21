@@ -70,7 +70,7 @@
     $exists = $conn->query($check_if_settings_exists_query);
     if ($exists->num_rows == 0) {
         $gnd_settings = (object) array("type"=>"setUneditedGndMeasReminderSetting");
-        $WebSocketClient = new WebsocketClient('localhost', 5050);
+        $WebSocketClient = new WebsocketClient('localhost', 5150);
         $WebSocketClient->sendData(json_encode($gnd_settings));
     }
 
@@ -94,7 +94,7 @@
             "msg"=>$details['msg'],
             "event_type"=> $details['type']
             );
-        $WebSocketClient = new WebsocketClient('localhost', 5050);
+        $WebSocketClient = new WebsocketClient('localhost', 5150);
         $WebSocketClient->sendData(json_encode($toBeSent));
         unset($WebSocketClient);
         $sql = "UPDATE ground_meas_reminder_automation SET status = 1 WHERE status = 0 and automation_id = '".$details['automation_id']."'";
