@@ -433,6 +433,46 @@ class ChatMessageModel {
         return $this->utf8_encode_recursive($full_data);
     }
 
+    public function getAllUnregisteredNumber(){
+        $get_all_unregistered_number = "SELECT 
+                                            CONCAT(users.lastname, ', ', users.firstname) AS full_name,
+                                            user_mobile.sim_num,
+                                            user_mobile.mobile_id,
+                                            user_mobile.user_id
+                                        FROM
+                                            smsinbox_users
+                                                INNER JOIN
+                                            user_mobile ON smsinbox_users.mobile_id = user_mobile.mobile_id
+                                                INNER JOIN
+                                            users ON user_mobile.user_id = users.user_id
+                                        WHERE
+                                            users.firstname LIKE '%UNKNOWN_%'
+                                                AND user_mobile.sim_num NOT LIKE '%SMART%'
+                                                AND user_mobile.sim_num NOT LIKE '%GLOBE%'
+                                        GROUP BY (user_mobile.mobile_id);";
+        $unregistered_result = $this->dbconn->query($get_all_unregistered_number);
+        $full_data['type'] = 'allUnregisteredNumbers';
+        $all_unregistered = [];
+        $counter = 0;
+
+        if($unregistered_result->num_rows > 0){
+            while ($row = $unregistered_result->fetch_assoc()) {
+                $normalized_number = substr($row["sim_num"], -10);
+                $all_unregistered[$counter]['unknown_label'] = strtoupper($row['full_name']);
+                $all_unregistered[$counter]['user_number'] = $normalized_number;
+                $all_unregistered[$counter]['mobile_id'] = $row['mobile_id'];
+                $all_unregistered[$counter]['user_id'] = $row['user_id'];
+                $counter++;
+            }
+            $full_data['data'] = $all_unregistered;
+        }   else {
+            echo "0 results\n";
+            $full_data['data'] = null;
+        }
+
+        return $this->utf8_encode_recursive($full_data);
+    }
+
     public function getFullnamesAndNumbers() {
         $get_full_names_query = "SELECT * FROM (SELECT UPPER(CONCAT(sites.site_code,' ',user_organization.org_name,' ',users.salutation,' ',users.firstname,' ',users.lastname)) as fullname,user_mobile.sim_num as number FROM users INNER JOIN user_organization ON user_organization.user_id = users.user_id LEFT JOIN user_mobile ON user_mobile.user_id = users.user_id LEFT JOIN sites ON user_organization.fk_site_id = sites.site_id) as fullcontact UNION SELECT * FROM (SELECT UPPER(CONCAT(dewsl_teams.team_code,' ',users.salutation,' ',users.firstname,' ',users.lastname)) as fullname,user_mobile.sim_num as number FROM users INNER JOIN user_mobile ON user_mobile.user_id = users.user_id LEFT JOIN dewsl_team_members ON dewsl_team_members.users_users_id = users.user_id LEFT JOIN dewsl_teams ON dewsl_teams.team_id = dewsl_team_members.dewsl_teams_team_id) as fullcontact;";
         // Make sure the connection is still alive, if not, try to reconnect 
@@ -2433,6 +2473,32 @@ class ChatMessageModel {
         $returnObj['type'] = "fetchedSelectedCmmtyContact";
 
         return $returnObj;
+    }
+
+    function getUnregisteredNumber($id){
+        $get_unregistered_number = "SELECT * FROM user_mobile WHERE user_id = $id";
+        $unregistered_result = $this->dbconn->query($get_unregistered_number);
+        $full_data['type'] = 'unregisteredNumber';
+        $unregistered = [];
+        $counter = 0;
+
+        if($unregistered_result->num_rows > 0){
+            while ($row = $unregistered_result->fetch_assoc()) {
+                $normalized_number = substr($row["sim_num"], -10);
+                $unregistered[$counter]['user_number'] = $normalized_number;
+                $unregistered[$counter]['mobile_id'] = $row['mobile_id'];
+                $unregistered[$counter]['user_id'] = $row['user_id'];
+                $unregistered[$counter]['mobile_status'] = $row['mobile_status'];
+                $unregistered[$counter]['priority'] = $row['priority'];
+                $counter++;
+            }
+            $full_data['data'] = $unregistered;
+        }   else {
+            echo "0 results\n";
+            $full_data['data'] = null;
+        }
+
+        return $this->utf8_encode_recursive($full_data);
     }
 
     public function updateDwslContact($data) {
