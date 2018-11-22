@@ -13,13 +13,13 @@ class ChatMessageModel {
     }
 
     public function initDBforCB() {
-        $host = "192.168.150.75";
-        $usr = "pysys_local";
-        $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
+        // $host = "192.168.150.75";
+        // $usr = "pysys_local";
+        // $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
 
-        // $host = "localhost";
-        // $usr = "root";
-        // $pwd = "senslope";
+        $host = "localhost";
+        $usr = "root";
+        $pwd = "senslope";
         
         $dbname = "comms_db";
         $this->dbconn = new \mysqli($host, $usr, $pwd, $dbname);
@@ -33,13 +33,13 @@ class ChatMessageModel {
     }
 
     function switchDBforCB() {
-        $host = "192.168.150.75";
-        $usr = "pysys_local";
-        $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
+        // $host = "192.168.150.75";
+        // $usr = "pysys_local";
+        // $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
 
-        // $host = "localhost";
-        // $usr = "root";
-        // $pwd = "senslope";
+        $host = "localhost";
+        $usr = "root";
+        $pwd = "senslope";
 
         $analysis_db = "senslopedb";
         $this->senslope_dbconn = new \mysqli($host, $usr, $pwd, $analysis_db);
@@ -3490,6 +3490,22 @@ class ChatMessageModel {
         return $mobile_data_container;
     }
 
+    function sendTallyUpdate($category, $event_id, $data_timestamp,$sent_count) {
+        $event_tally_url = "http://localhost/qa_tally/update_tally";
+        $data = [
+            'category' => $category,
+            'event_id' => $event_id,
+            'data_timestamp' => $data_timestamp,
+            'sent_count' => $sent_count
+        ];
+        $ch = curl_init($event_tally_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        $response = curl_exec($ch);
+        var_dump($response);
+        curl_close($ch);
+    }
+
     function getRoutineMobileIDsViaSiteName($offices,$site_codes) {
         $where = "";
         $counter = 0;
@@ -4674,9 +4690,19 @@ class ChatMessageModel {
         while ($row = $result->fetch_assoc()) {
             array_push($alert_three, $row['site_code']);
         }
+
         $event_sites = [];
         $this->checkConnectionDB($event_sites_query);
         $result = $this->senslope_dbconn->query($event_sites_query);
+        while ($row = $result->fetch_assoc()) {
+            array_push($event_sites, $row);
+        }
+
+        $reconstrunct_event_sites_query = "SELECT * FROM (SELECT DISTINCT site_code,status,public_alert_release.event_id from sites INNER JOIN public_alert_event ON sites.site_id=public_alert_event.site_id INNER JOIN public_alert_release ON public_alert_event.event_id = public_alert_release.event_id WHERE public_alert_event.status <> 'routine' AND public_alert_event.status <> 'finished' AND public_alert_event.status <> 'invalid' AND public_alert_event.status <> 'extended' and public_alert_release.internal_alert_level NOT LIKE 'A3%' order by site_code) AS distinct_events INNER JOIN public_alert_release ON distinct_events.event_id = public_alert_release.event_id ORDER BY release_id desc LIMIT ".sizeOf($event_sites);
+
+        $event_sites = [];
+        $this->checkConnectionDB($reconstrunct_event_sites_query);
+        $result = $this->senslope_dbconn->query($reconstrunct_event_sites_query);
         while ($row = $result->fetch_assoc()) {
             array_push($event_sites, $row);
         }
@@ -4693,8 +4719,8 @@ class ChatMessageModel {
                 $final_sites = $event_sites;
             }
         }
-        $temp_sites = [];
 
+        $temp_sites = [];
         foreach ($final_sites as $evt_site) {
             sizeOf($alert_three);
             if (sizeOf($alert_three) > 0) {
