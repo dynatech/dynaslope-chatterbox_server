@@ -4012,6 +4012,11 @@ class ChatMessageModel {
 
     function parseTemplateCodes($offices, $site_id, $data_timestamp, $timestamp, $template, $msg, $full_name = "") {
         $codes = ["(sender)","(sms_msg)","(current_release_time)","(stakeholders)","(previous_release_time)"];
+        if ($timestamp == "12:00 AM"){
+            $timestamp = "12:00 MN";
+        }else if ($timestamp == "12:00 PM"){
+            $timestamp = "12:00 NN";
+        }
         foreach ($codes as $code) {
             switch ($code) {
                 case '(sender)':
