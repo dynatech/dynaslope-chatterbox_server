@@ -4744,9 +4744,9 @@ class ChatMessageModel {
         $extended_sites = [];
         $sites_cant_send_gndmeas = $this->getGroundMeasurementsForToday();
         $extended_sites_query = "SELECT sites.site_code,public_alert_event.validity from sites INNER JOIN public_alert_event ON sites.site_id=public_alert_event.site_id WHERE public_alert_event.status = 'extended' order by sites.site_code";
+
         $this->checkConnectionDB($extended_sites_query);
         $result = $this->senslope_dbconn->query($extended_sites_query);
-
         while($row = $result->fetch_assoc()) {
                 array_push($extended_sites, $row['site_code']);
         }
@@ -4768,6 +4768,12 @@ class ChatMessageModel {
             array_push($temp, $site);
         }
         return $temp;
+    }
+
+    function extendedDetails($site) {
+        $extended_query = "SELECT DISTINCT site_code, status, public_alert_release.event_id, public_alert_release.data_timestamp FROM sites INNER JOIN public_alert_event ON sites.site_id = public_alert_event.site_id INNER JOIN public_alert_release ON public_alert_event.event_id = public_alert_release.event_id WHERE public_alert_event.status = 'extended' AND site_code = '".$site."' order by data_timestamp desc limit 1;";
+        $result = $this->senslope_dbconn->query($extended_query);
+        return $result->fetch_assoc();
     }
 
     function getGroundMeasurementReminderTemplate() {

@@ -482,17 +482,28 @@ class ChatterBox implements MessageComponentInterface {
                     $counter++;
                     $auto_tag = $this->chatModel->autoTagMessage('86',$convo_id,$exchanges['timestamp'],'#GroundMeasReminder');// ID: 86 for SWAT Automation
                 }
+
                 if ($decodedText->event_type == "event") {
                     $sites_on_event = $this->chatModel->eventSites();
                     foreach ($sites_on_event as $site_event) {
                         if (strtoupper($site_event['site_code']) == strtoupper($decodedText->sitenames[0])) {
                             $site_details = $this->chatModel->getSiteDetails($site_event['site_code']);
                             $auto_narrative = $this->chatModel->autoNarrative(['LEWC'],$site_event['event_id'],$site_details['site_id'],date("Y-m-d H:i:s", time()),date("Y-m-d H:i:s", time()),"#GroundMeasReminder",$decodedText->msg);
-                            $this->chatModel->sendTallyUpdate("gndmeas_reminder",$site_event['event_id'],$site_event['data_timestamp'], $counter);
+                            $this->chatModel->sendTallyUpdate("gndmeas_reminder_event",$site_event['event_id'],$site_event['data_timestamp'], $counter);
                         }
 
                     }
+                } else if ($decodedText->event_type == "extended") {
+                    $temp_container = [];
+                    $extended_sites = $this->chatModel->extendedSites();
+                    foreach ($extended_sites as $sites) {
+                        if (strtoupper($sites) == strtoupper($decodedText->sitenames[0])) {
+                            $get_extended_sites_details = $this->chatModel->extendedDetails($sites);
+                            $this->chatModel->sendTallyUpdate("gndmeas_reminder_extended",$get_extended_sites_details['event_id'],$get_extended_sites_details['data_timestamp'], $counter);   
+                        }
+                    }
                 }
+
                 $from->send(json_encode($exchanges));
             } else if ($msgType == "getSiteDetails") {
                 $site_details = [];
