@@ -220,7 +220,6 @@ class ChatterBox implements MessageComponentInterface {
                             "site_code" => $decodedText->data->site_code
                         ];
                     }
-                    var_dump($request);
                     $exchanges = $this->chatModel->tagMessage($request);
                     $from->send(json_encode($exchanges));
                 }

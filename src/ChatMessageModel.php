@@ -2,13 +2,16 @@
 namespace MyApp;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
+use MyApp\QATallyLibrary;
 
 class ChatMessageModel {
     protected $dbconn;
+    protected $qa_tally;
 
     public function __construct() {
         $this->initDBforCB();
         $this->switchDBforCB();
+        $this->qa_tally = new QATallyLibrary;
         date_default_timezone_set('Asia/Manila');
     }
 
@@ -3708,9 +3711,7 @@ class ChatMessageModel {
             $insert_tag_status = $this->insertTag($data); 
             $full_data['tag_status'] = $insert_tag_status;
             $full_data['status'] = true;
-            var_dump($data);
         } else {
-            var_dump($data);
             $full_data['tag_status'] = $this->tagToNarratives($data);
             $full_data['status'] = true;
         }
@@ -3760,13 +3761,14 @@ class ChatMessageModel {
                         array_push($event_container, $row);
                     }
                 }
+                var_dump($event_container);
                 foreach ($event_container as $sites) {
                     $narrative = $this->parseTemplateCodes($offices, $sites['site_id'], $data['ts'], $time_sent, $template, $data['msg'], $data['full_name']);
                     $sql = "INSERT INTO narratives VALUES(0,'".$sites['event_id']."','".$data['ts']."','".$narrative."')";
                     $result = $this->senslope_dbconn->query($sql);
 
-                    if ($data['tag'] == "#EwiMessage") {
-                        $this->qa_tally->updateTally("event",$sites['event_id'],date ("Y-m-d H:i:s"),1);
+                    if ($data['tag'] == "#EwiResponse") {
+                        $tally = $this->qa_tally->sendTallyUpdate("ewi_acknowledgement",$sites['event_id'],date ("Y-m-d H:i:s"),1);
                     }
                 }
 

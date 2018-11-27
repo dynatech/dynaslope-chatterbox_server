@@ -24,7 +24,7 @@
             var_dump($event_id);
         }
 
-        function sendTallyUpdate($category, $event_id, $data_timestamp,$sent_count) {
+        public function sendTallyUpdate($category, $event_id, $data_timestamp,$sent_count) {
         $event_tally_url = "http://localhost/qa_tally/update_tally";
         $data = [
             'category' => $category,
