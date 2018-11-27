@@ -3,14 +3,18 @@ namespace MyApp;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use MyApp\ChatMessageModel;
+use MyApp\QATallyLibrary;
+
 
 class ChatterBox implements MessageComponentInterface {
     protected $clients;
     protected $dbconn;
     protected $qiInit;
     protected $chatModel;
+    protected $qa_tally;
 
     public function __construct() {
+        $this->qa_tally = new QATallyLibrary;
         $this->chatModel = new ChatMessageModel;
         $this->clients = new \SplObjectStorage;
     }
@@ -216,6 +220,7 @@ class ChatterBox implements MessageComponentInterface {
                             "site_code" => $decodedText->data->site_code
                         ];
                     }
+                    var_dump($request);
                     $exchanges = $this->chatModel->tagMessage($request);
                     $from->send(json_encode($exchanges));
                 }
@@ -346,7 +351,7 @@ class ChatterBox implements MessageComponentInterface {
                         array_push($gintag_status, $this->chatModel->autoTagMessage($decodedText->account_id,$convo_id,$send_status['timestamp']));
                     }
                 }
-                $this->chatModel->sendTallyUpdate($decodedText->event_category,$decodedText->event_id,$decodedText->data_timestamp, $counter);
+                $this->qa_tally->sendTallyUpdate($decodedText->event_category,$decodedText->event_id,$decodedText->data_timestamp, $counter);
                 $full_data['type'] = "sentEwiDashboard";
                 $full_data['statuses'] = $status;
                 $full_data['narrative_status'] = $this->chatModel->autoNarrative(array_unique($recipients_to_tag), $decodedText->event_id,$decodedText->site_id,$decodedText->data_timestamp, $decodedText->timestamp ,"#EwiMessage",$decodedText->msg, $decodedText->previous_release_time,$decodedText->event_start);
@@ -489,7 +494,7 @@ class ChatterBox implements MessageComponentInterface {
                         if (strtoupper($site_event['site_code']) == strtoupper($decodedText->sitenames[0])) {
                             $site_details = $this->chatModel->getSiteDetails($site_event['site_code']);
                             $auto_narrative = $this->chatModel->autoNarrative(['LEWC'],$site_event['event_id'],$site_details['site_id'],date("Y-m-d H:i:s", time()),date("Y-m-d H:i:s", time()),"#GroundMeasReminder",$decodedText->msg);
-                            $this->chatModel->sendTallyUpdate("gndmeas_reminder_event",$site_event['event_id'],$site_event['data_timestamp'], $counter);
+                            $this->qa_tally->sendTallyUpdate("gndmeas_reminder_event",$site_event['event_id'],$site_event['data_timestamp'], $counter);
                         }
 
                     }
@@ -499,7 +504,7 @@ class ChatterBox implements MessageComponentInterface {
                     foreach ($extended_sites as $sites) {
                         if (strtoupper($sites) == strtoupper($decodedText->sitenames[0])) {
                             $get_extended_sites_details = $this->chatModel->extendedDetails($sites);
-                            $this->chatModel->sendTallyUpdate("gndmeas_reminder_extended",$get_extended_sites_details['event_id'],$get_extended_sites_details['data_timestamp'], $counter);   
+                            $this->qa_tally->sendTallyUpdate("gndmeas_reminder_extended",$get_extended_sites_details['event_id'],$get_extended_sites_details['data_timestamp'], $counter);   
                         }
                     }
                 }

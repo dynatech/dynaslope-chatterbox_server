@@ -26,7 +26,7 @@ class ChatMessageModel {
         if ($this->dbconn->connect_error) {
             die("Connection failed: " . $this->dbconn->connect_error);
         } else {
-            echo $host . "\n";
+            echo "Host server: ".$host . "\n";
             echo "Connection Established for comms_db... \n";
             return true;
         }
@@ -46,7 +46,7 @@ class ChatMessageModel {
         if ($this->senslope_dbconn->connect_error) {
             die("Connection failed: " . $this->senslope_dbconn->connect_error);
         } else {
-            echo $host . "\n";
+            echo "Host server: ".$host . "\n";
             echo "Connection Established for senslopedb... \n";
             return true;
         }
@@ -3490,21 +3490,6 @@ class ChatMessageModel {
         return $mobile_data_container;
     }
 
-    function sendTallyUpdate($category, $event_id, $data_timestamp,$sent_count) {
-        $event_tally_url = "http://localhost/qa_tally/update_tally";
-        $data = [
-            'category' => $category,
-            'event_id' => $event_id,
-            'data_timestamp' => $data_timestamp,
-            'sent_count' => $sent_count
-        ];
-        $ch = curl_init($event_tally_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-        $response = curl_exec($ch);
-        curl_close($ch);
-    }
-
     function getRoutineMobileIDsViaSiteName($offices,$site_codes) {
         $where = "";
         $counter = 0;
@@ -3723,7 +3708,9 @@ class ChatMessageModel {
             $insert_tag_status = $this->insertTag($data); 
             $full_data['tag_status'] = $insert_tag_status;
             $full_data['status'] = true;
+            var_dump($data);
         } else {
+            var_dump($data);
             $full_data['tag_status'] = $this->tagToNarratives($data);
             $full_data['status'] = true;
         }
@@ -3773,19 +3760,20 @@ class ChatMessageModel {
                         array_push($event_container, $row);
                     }
                 }
-                // $time_sent = $this->setTimeSent($data['ts'], $data['time_sent']);
                 foreach ($event_container as $sites) {
                     $narrative = $this->parseTemplateCodes($offices, $sites['site_id'], $data['ts'], $time_sent, $template, $data['msg'], $data['full_name']);
                     $sql = "INSERT INTO narratives VALUES(0,'".$sites['event_id']."','".$data['ts']."','".$narrative."')";
                     $result = $this->senslope_dbconn->query($sql);
+
+                    if ($data['tag'] == "#EwiMessage") {
+                        $this->qa_tally->updateTally("event",$sites['event_id'],date ("Y-m-d H:i:s"),1);
+                    }
                 }
 
             } else {
                 // Add error message
             }
-
         } else {
-
             $insert_tag_status = $this->insertTag($data);
             if ($insert_tag_status['status'] == true) {
                 $filter_builder = "";
