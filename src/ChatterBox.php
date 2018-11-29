@@ -55,7 +55,10 @@ class ChatterBox implements MessageComponentInterface {
                 $from->send(json_encode($latestAlerts));
             } else if ($msgType == "loadAllCommunityContacts"){
                 $exchanges = $this->chatModel->getAllCmmtyContacts();
-                $from->send(json_encode($exchanges)); // New Code Starts here
+                $from->send(json_encode($exchanges));
+            } else if ($msgType == "loadAllUnregisteredNumber"){
+                $exchanges = $this->chatModel->getAllUnregisteredNumber();
+                $from->send(json_encode($exchanges));
             } else if ($msgType == "loadAllDewslContacts") {
                 $exchanges = $this->chatModel->getAllDwslContacts();
                 $from->send(json_encode($exchanges));
@@ -66,6 +69,10 @@ class ChatterBox implements MessageComponentInterface {
             } else if ($msgType == "loadCommunityContact") {
                 $data = $decodedText->data;
                 $exchanges = $this->chatModel->getCmmtyContact($data);
+                $from->send(json_encode($exchanges));
+            } else if ($msgType == "loadUnregisteredMobileNumber") {
+                $data = $decodedText->data;
+                $exchanges = $this->chatModel->getUnregisteredNumber($data);
                 $from->send(json_encode($exchanges));
             } else if ($msgType == "updateDewslContact") {
                 $data = $decodedText->data;

@@ -433,6 +433,46 @@ class ChatMessageModel {
         return $this->utf8_encode_recursive($full_data);
     }
 
+    public function getAllUnregisteredNumber(){
+        $get_all_unregistered_number = "SELECT 
+                                            CONCAT(users.lastname, ', ', users.firstname) AS full_name,
+                                            user_mobile.sim_num,
+                                            user_mobile.mobile_id,
+                                            user_mobile.user_id
+                                        FROM
+                                            smsinbox_users
+                                                INNER JOIN
+                                            user_mobile ON smsinbox_users.mobile_id = user_mobile.mobile_id
+                                                INNER JOIN
+                                            users ON user_mobile.user_id = users.user_id
+                                        WHERE
+                                            users.firstname LIKE '%UNKNOWN_%'
+                                                AND user_mobile.sim_num NOT LIKE '%SMART%'
+                                                AND user_mobile.sim_num NOT LIKE '%GLOBE%'
+                                        GROUP BY (user_mobile.mobile_id);";
+        $unregistered_result = $this->dbconn->query($get_all_unregistered_number);
+        $full_data['type'] = 'allUnregisteredNumbers';
+        $all_unregistered = [];
+        $counter = 0;
+
+        if($unregistered_result->num_rows > 0){
+            while ($row = $unregistered_result->fetch_assoc()) {
+                $normalized_number = substr($row["sim_num"], -10);
+                $all_unregistered[$counter]['unknown_label'] = strtoupper($row['full_name']);
+                $all_unregistered[$counter]['user_number'] = $normalized_number;
+                $all_unregistered[$counter]['mobile_id'] = $row['mobile_id'];
+                $all_unregistered[$counter]['user_id'] = $row['user_id'];
+                $counter++;
+            }
+            $full_data['data'] = $all_unregistered;
+        }   else {
+            echo "0 results\n";
+            $full_data['data'] = null;
+        }
+
+        return $this->utf8_encode_recursive($full_data);
+    }
+
     public function getFullnamesAndNumbers() {
         $get_full_names_query = "SELECT * FROM (SELECT UPPER(CONCAT(sites.site_code,' ',user_organization.org_name,' ',users.salutation,' ',users.firstname,' ',users.lastname)) as fullname,user_mobile.sim_num as number FROM users INNER JOIN user_organization ON user_organization.user_id = users.user_id LEFT JOIN user_mobile ON user_mobile.user_id = users.user_id LEFT JOIN sites ON user_organization.fk_site_id = sites.site_id) as fullcontact UNION SELECT * FROM (SELECT UPPER(CONCAT(dewsl_teams.team_code,' ',users.salutation,' ',users.firstname,' ',users.lastname)) as fullname,user_mobile.sim_num as number FROM users INNER JOIN user_mobile ON user_mobile.user_id = users.user_id LEFT JOIN dewsl_team_members ON dewsl_team_members.users_users_id = users.user_id LEFT JOIN dewsl_teams ON dewsl_teams.team_id = dewsl_team_members.dewsl_teams_team_id) as fullcontact;";
         // Make sure the connection is still alive, if not, try to reconnect 
@@ -2435,6 +2475,32 @@ class ChatMessageModel {
         return $returnObj;
     }
 
+    function getUnregisteredNumber($id){
+        $get_unregistered_number = "SELECT * FROM user_mobile WHERE user_id = $id";
+        $unregistered_result = $this->dbconn->query($get_unregistered_number);
+        $full_data['type'] = 'unregisteredNumber';
+        $unregistered = [];
+        $counter = 0;
+
+        if($unregistered_result->num_rows > 0){
+            while ($row = $unregistered_result->fetch_assoc()) {
+                $normalized_number = substr($row["sim_num"], -10);
+                $unregistered[$counter]['user_number'] = $normalized_number;
+                $unregistered[$counter]['mobile_id'] = $row['mobile_id'];
+                $unregistered[$counter]['user_id'] = $row['user_id'];
+                $unregistered[$counter]['mobile_status'] = $row['mobile_status'];
+                $unregistered[$counter]['priority'] = $row['priority'];
+                $counter++;
+            }
+            $full_data['data'] = $unregistered;
+        }   else {
+            echo "0 results\n";
+            $full_data['data'] = null;
+        }
+
+        return $this->utf8_encode_recursive($full_data);
+    }
+
     public function updateDwslContact($data) {
         $query_contact_info = "UPDATE users SET firstname='$data->firstname',lastname='$data->lastname',middlename='$data->middlename',salutation='$data->salutation',birthday='$data->birthdate',sex='$data->gender',status=$data->contact_active_status WHERE user_id = $data->id;";
         $result = $this->dbconn->query($query_contact_info);
@@ -3547,8 +3613,9 @@ class ChatMessageModel {
         $convo_id_container = [];
         $current_ts = date("Y-m-d H:i:s", time());
         foreach ($recipients as $recipient) {
+            $message = str_replace('"','\"',$message);
             $insert_smsoutbox_query = 'INSERT INTO smsoutbox_users VALUES (0,"'.$current_ts.'","central","'.$message.'")';
-		    $smsoutbox = $this->dbconn->query($insert_smsoutbox_query);
+	    $smsoutbox = $this->dbconn->query($insert_smsoutbox_query);
             array_push($convo_id_container, $this->dbconn->insert_id);
             if ($smsoutbox == true) {
                 $insert_smsoutbox_status = "INSERT INTO smsoutbox_user_status VALUES (0,'".$this->dbconn->insert_id."','".$recipient."',null,0,0,'".$this->getGsmId($recipient)."')";      
@@ -3961,6 +4028,11 @@ class ChatMessageModel {
 
     function parseTemplateCodes($offices, $site_id, $data_timestamp, $timestamp, $template, $msg, $full_name = "") {
         $codes = ["(sender)","(sms_msg)","(current_release_time)","(stakeholders)","(previous_release_time)"];
+        if ($timestamp == "12:00 AM"){
+            $timestamp = "12:00 MN";
+        }else if ($timestamp == "12:00 PM"){
+            $timestamp = "12:00 NN";
+        }
         foreach ($codes as $code) {
             switch ($code) {
                 case '(sender)':
