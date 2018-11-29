@@ -318,7 +318,8 @@ class ChatterBox implements MessageComponentInterface {
                 $full_data = [
                     "type" => "fetchedEwiDashboardTemplate",
                     "recipients" => $this->chatModel->utf8_encode_recursive($recipients),
-                    "template" => $template
+                    "template" => $template,
+                    "category" => $decodedText->event_category
                 ];
                 $from->send(json_encode($full_data));
             } else if ($msgType == "sendEwiViaDashboard") {
@@ -334,19 +335,25 @@ class ChatterBox implements MessageComponentInterface {
                         "first_name" => trim($raw_name[0]),
                         "last_name" => trim($raw_name[1])
                     ];
+
                     $mobile_details = $this->chatModel->getMobileDetails($name_data);
-                    $send_status = $this->chatModel->sendSms([$mobile_details[0]["mobile_id"]],$decodedText->msg);
-                    $temp = [
-                        "status" => $send_status['data'],
-                        "recipient" => $recipient
-                    ];
-                    $temp_site = $temp_org[0];
-                    array_push($recipients_to_tag,$temp_org[1]);
-                    array_push($status,$temp);
+                    foreach ($mobile_details as $detail) {
+                        $counter++;
+                        $send_status = $this->chatModel->sendSms([$detail["mobile_id"]],$decodedText->msg);
+                        $temp = [
+                            "status" => $send_status['data'],
+                            "recipient" => $recipient
+                        ];
+                        $temp_site = $temp_org[0];
+                        array_push($recipients_to_tag,$temp_org[1]);
+                        array_push($status,$temp);
+                    }
+
                     foreach ($send_status['convo_id'] as $convo_id) {
                         array_push($gintag_status, $this->chatModel->autoTagMessage($decodedText->account_id,$convo_id,$send_status['timestamp']));
                     }
                 }
+                // $this->chatModel->sendTallyUpdate($decodedText->event_category,$decodedText->event_id,$decodedText->data_timestamp, $counter);
                 $full_data['type'] = "sentEwiDashboard";
                 $full_data['statuses'] = $status;
                 $full_data['narrative_status'] = $this->chatModel->autoNarrative(array_unique($recipients_to_tag), $decodedText->event_id,$decodedText->site_id,$decodedText->data_timestamp, $decodedText->timestamp ,"#EwiMessage",$decodedText->msg, $decodedText->previous_release_time,$decodedText->event_start);
@@ -470,6 +477,7 @@ class ChatterBox implements MessageComponentInterface {
                     }
                 }
             } else if ($msgType == "sendAutoGndMeasReminder") {
+                $counter = 0;
                 $temp_mobile_id = [];
                 $site_ids = $this->chatModel->getSiteDetails($decodedText->sitenames[0]);
                 $mobile_ids = $this->chatModel->getMobileDetailsViaOfficeAndSitename($decodedText->offices,[$site_ids['site_id']]);
@@ -478,6 +486,7 @@ class ChatterBox implements MessageComponentInterface {
                 }
                 $exchanges = $this->chatModel->sendSms($temp_mobile_id,$decodedText->msg);
                 foreach ($exchanges['convo_id'] as $convo_id) {
+                    $counter++;
                     $auto_tag = $this->chatModel->autoTagMessage('86',$convo_id,$exchanges['timestamp'],'#GroundMeasReminder');// ID: 86 for SWAT Automation
                 }
                 if ($decodedText->event_type == "event") {
@@ -485,7 +494,8 @@ class ChatterBox implements MessageComponentInterface {
                     foreach ($sites_on_event as $site_event) {
                         if (strtoupper($site_event['site_code']) == strtoupper($decodedText->sitenames[0])) {
                             $site_details = $this->chatModel->getSiteDetails($site_event['site_code']);
-                            $auto_narrative = $this->chatModel->autoNarrative(['LEWC'],$site_event['event_id'],$site_details['site_id'],date("Y-m-d H:i:s", time()),date("Y-m-d H:i:s", time()),"#GroundMeasReminder",$decodedText->msg); 
+                            $auto_narrative = $this->chatModel->autoNarrative(['LEWC'],$site_event['event_id'],$site_details['site_id'],date("Y-m-d H:i:s", time()),date("Y-m-d H:i:s", time()),"#GroundMeasReminder",$decodedText->msg);
+                            $this->chatModel->sendTallyUpdate("gndmeas_reminder",$site_event['event_id'],$site_event['data_timestamp'], $counter);
                         }
 
                     }

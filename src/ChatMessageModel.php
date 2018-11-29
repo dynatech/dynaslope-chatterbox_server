@@ -3556,6 +3556,21 @@ class ChatMessageModel {
         return $mobile_data_container;
     }
 
+    function sendTallyUpdate($category, $event_id, $data_timestamp,$sent_count) {
+        $event_tally_url = "http://localhost/qa_tally/update_tally";
+        $data = [
+            'category' => $category,
+            'event_id' => $event_id,
+            'data_timestamp' => $data_timestamp,
+            'sent_count' => $sent_count
+        ];
+        $ch = curl_init($event_tally_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        $response = curl_exec($ch);
+        curl_close($ch);
+    }
+
     function getRoutineMobileIDsViaSiteName($offices,$site_codes) {
         $where = "";
         $counter = 0;
@@ -3966,8 +3981,7 @@ class ChatMessageModel {
         $template = $narrative_input->fetch_assoc()['narrative_input'];
         if (($tag == "#EwiMessage" || $tag == "#AlteredEwi") && strtotime ('-30 minute' , strtotime ($data_timestamp)) != strtotime($event_start)) {
             
-            $check_ack = "SELECT * FROM narratives WHERE '".$data_timestamp."' > (now() - interval 240 minute) AND event_id = '".$event_id."' AND narrative LIKE '%EWI SMS acknowledged by%'";
-            
+            $check_ack = "SELECT * FROM narratives WHERE timestamp BETWEEN ('".$data_timestamp."' - interval 240 minute) AND '".$data_timestamp."' AND (event_id = '".$event_id."' AND narrative LIKE '%EWI SMS acknowledged by%')";
             $ack_result = $this->senslope_dbconn->query($check_ack);
             if ($ack_result->num_rows == 0){
                 $timestamp_release_date = strtotime ( '-1 second' , strtotime ( $data_timestamp ) ) ;
@@ -3975,6 +3989,9 @@ class ChatMessageModel {
 
                 $no_ack_narrative_input = $this->getNarrativeInput("#NoAckEwi");
                 $no_ack_template = $no_ack_narrative_input->fetch_assoc()['narrative_input'];
+                if (strtotime($event_start.'+4hours') != strtotime($data_timestamp) && strtotime($data_timestamp.'-4hours') < strtotime($event_start)) {
+                    $previous_release_time = "onset";
+                }
                 $no_ack_narrative = $this->parseTemplateCodes($offices, $site_id, $data_timestamp, $previous_release_time, $no_ack_template, $msg);
                 $sql = "INSERT INTO narratives VALUES(0,'".$event_id."','".$timestamp_release_date."','".$no_ack_narrative."')";
                 $this->senslope_dbconn->query($sql);
@@ -4746,9 +4763,19 @@ class ChatMessageModel {
         while ($row = $result->fetch_assoc()) {
             array_push($alert_three, $row['site_code']);
         }
+
         $event_sites = [];
         $this->checkConnectionDB($event_sites_query);
         $result = $this->senslope_dbconn->query($event_sites_query);
+        while ($row = $result->fetch_assoc()) {
+            array_push($event_sites, $row);
+        }
+
+        $reconstrunct_event_sites_query = "SELECT * FROM (SELECT DISTINCT site_code,status,public_alert_release.event_id from sites INNER JOIN public_alert_event ON sites.site_id=public_alert_event.site_id INNER JOIN public_alert_release ON public_alert_event.event_id = public_alert_release.event_id WHERE public_alert_event.status <> 'routine' AND public_alert_event.status <> 'finished' AND public_alert_event.status <> 'invalid' AND public_alert_event.status <> 'extended' and public_alert_release.internal_alert_level NOT LIKE 'A3%' order by site_code) AS distinct_events INNER JOIN public_alert_release ON distinct_events.event_id = public_alert_release.event_id ORDER BY release_id desc LIMIT ".sizeOf($event_sites);
+
+        $event_sites = [];
+        $this->checkConnectionDB($reconstrunct_event_sites_query);
+        $result = $this->senslope_dbconn->query($reconstrunct_event_sites_query);
         while ($row = $result->fetch_assoc()) {
             array_push($event_sites, $row);
         }
@@ -4765,8 +4792,8 @@ class ChatMessageModel {
                 $final_sites = $event_sites;
             }
         }
-        $temp_sites = [];
 
+        $temp_sites = [];
         foreach ($final_sites as $evt_site) {
             sizeOf($alert_three);
             if (sizeOf($alert_three) > 0) {
