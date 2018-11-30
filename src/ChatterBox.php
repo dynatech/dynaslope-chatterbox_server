@@ -353,7 +353,7 @@ class ChatterBox implements MessageComponentInterface {
                         array_push($gintag_status, $this->chatModel->autoTagMessage($decodedText->account_id,$convo_id,$send_status['timestamp']));
                     }
                 }
-                $this->chatModel->sendTallyUpdate($decodedText->event_category,$decodedText->event_id,$decodedText->data_timestamp, $counter);
+                // $this->chatModel->sendTallyUpdate($decodedText->event_category,$decodedText->event_id,$decodedText->data_timestamp, $counter);
                 $full_data['type'] = "sentEwiDashboard";
                 $full_data['statuses'] = $status;
                 $full_data['narrative_status'] = $this->chatModel->autoNarrative(array_unique($recipients_to_tag), $decodedText->event_id,$decodedText->site_id,$decodedText->data_timestamp, $decodedText->timestamp ,"#EwiMessage",$decodedText->msg, $decodedText->previous_release_time,$decodedText->event_start);
