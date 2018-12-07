@@ -409,9 +409,6 @@ class ChatterBox implements MessageComponentInterface {
                 $site_status = [];
                 // if($decodedText->overwrite == true) {$this->chatModel->flagGndMeasSettingsSentStatus();}
                 foreach ($decodedText->sites as $site) {
-                    if ($site == 'MSL' || $site == 'MSU') {
-                        $site = 'mes';
-                    }
                     $to_send = $this->chatModel->insertGndMeasReminderSettings($site, $decodedText->category, $decodedText->template, $decodedText->altered, $decodedText->modified, $decodedText->send_time);
                 }
                 $full_data['type'] = "insertGndMeasReminderSettingsStatus";
@@ -443,9 +440,6 @@ class ChatterBox implements MessageComponentInterface {
                         $type = 'routine';
                         $template_gnd_meas = str_replace("(monitoring_type)", $type, $ground_meas_reminder_template['template']);
                         if (in_array($site, $cant_send_gndmeas) == false) {
-                            if ($site == 'msl' || $site == 'msu') {
-                                $site = 'mes';
-                            }
                             $set_gnd_meas_reminder = $this->chatModel->insertGndMeasReminderSettings($site, $type, $template_gnd_meas, 0, 'default' , $ground_time);
                         } 
                     }
@@ -455,12 +449,7 @@ class ChatterBox implements MessageComponentInterface {
                         $type = 'event';
                         $template_gnd_meas = str_replace("(monitoring_type)", $type, $ground_meas_reminder_template['template']);
                         if (in_array($site['site_code'], $cant_send_gndmeas) == false) {
-                            if ($site['site_code'] == 'msl' || $site['site_code'] == 'msu') {
-                                $site['site_code'] = 'mes';
-                            }
-
                             $set_gnd_meas_reminder = $this->chatModel->insertGndMeasReminderSettings($site['site_code'], $type, $template_gnd_meas, 0, 'default' , $ground_time);
-
                         } 
                     }
                 }
@@ -469,9 +458,6 @@ class ChatterBox implements MessageComponentInterface {
                         $type = 'extended';
                         $template_gnd_meas = str_replace("(monitoring_type)", $type, $ground_meas_reminder_template['template']);
                         if (in_array($site, $cant_send_gndmeas) == false) {
-                            if ($site == 'msl' || $site == 'msu') {
-                                $site = 'mes';
-                            }
                             $set_gnd_meas_reminder = $this->chatModel->insertGndMeasReminderSettings($site, $type, $template_gnd_meas, 0, 'default' , $ground_time);
                         } 
                     }
