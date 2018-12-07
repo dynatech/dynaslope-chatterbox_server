@@ -481,26 +481,37 @@ class ChatterBox implements MessageComponentInterface {
                 $temp_mobile_id = [];
                 $site_ids = $this->chatModel->getSiteDetails($decodedText->sitenames[0]);
                 $mobile_ids = $this->chatModel->getMobileDetailsViaOfficeAndSitename($decodedText->offices,[$site_ids['site_id']]);
-                foreach ($mobile_ids as $mobile_id) {
-                    array_push($temp_mobile_id, $mobile_id['mobile_id']);
-                }
-                $exchanges = $this->chatModel->sendSms($temp_mobile_id,$decodedText->msg);
-                foreach ($exchanges['convo_id'] as $convo_id) {
-                    $counter++;
-                    $auto_tag = $this->chatModel->autoTagMessage('86',$convo_id,$exchanges['timestamp'],'#GroundMeasReminder');// ID: 86 for SWAT Automation
-                }
-                if ($decodedText->event_type == "event") {
-                    $sites_on_event = $this->chatModel->eventSites();
-                    foreach ($sites_on_event as $site_event) {
-                        if (strtoupper($site_event['site_code']) == strtoupper($decodedText->sitenames[0])) {
-                            $site_details = $this->chatModel->getSiteDetails($site_event['site_code']);
-                            $auto_narrative = $this->chatModel->autoNarrative(['LEWC'],$site_event['event_id'],$site_details['site_id'],date("Y-m-d H:i:s", time()),date("Y-m-d H:i:s", time()),"#GroundMeasReminder",$decodedText->msg);
-                            $this->chatModel->sendTallyUpdate("gndmeas_reminder",$site_event['event_id'],$site_event['data_timestamp'], $counter);
-                        }
 
+                $cant_send_gndmeas = $this->chatModel->getGroundMeasurementsForToday();
+
+                if (in_array(strtolower($decodedText->sitenames[0]), $cant_send_gndmeas) == false) {
+                    foreach ($mobile_ids as $mobile_id) {
+                        array_push($temp_mobile_id, $mobile_id['mobile_id']);
                     }
+
+                    $exchanges = $this->chatModel->sendSms($temp_mobile_id,$decodedText->msg);
+                    foreach ($exchanges['convo_id'] as $convo_id) {
+                        $counter++;
+                        $auto_tag = $this->chatModel->autoTagMessage('86',$convo_id,$exchanges['timestamp'],'#GroundMeasReminder');// ID: 86 for SWAT Automation
+                    }
+
+                                
+                    if ($decodedText->event_type == "event") {
+                        $sites_on_event = $this->chatModel->eventSites();
+                        foreach ($sites_on_event as $site_event) {
+                            if (strtoupper($site_event['site_code']) == strtoupper($decodedText->sitenames[0])) {
+                                $site_details = $this->chatModel->getSiteDetails($site_event['site_code']);
+                                $auto_narrative = $this->chatModel->autoNarrative(['LEWC'],$site_event['event_id'],$site_details['site_id'],date("Y-m-d H:i:s", time()),date("Y-m-d H:i:s", time()),"#GroundMeasReminder",$decodedText->msg);
+                                $this->chatModel->sendTallyUpdate("gndmeas_reminder",$site_event['event_id'],$site_event['data_timestamp'], $counter);
+                            }
+
+                        }
+                    }
+                    $from->send(json_encode($exchanges));
+                } else {
+                    echo "Filtered: ".$decodedText->sitenames[0]."\n";
                 }
-                $from->send(json_encode($exchanges));
+
             } else if ($msgType == "getSiteDetails") {
                 $site_details = [];
                 $samar_sites = ["jor", "bar", "ime", "lpa", "hin", "lte", "par", "lay"];
