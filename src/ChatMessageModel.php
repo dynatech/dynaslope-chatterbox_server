@@ -4584,13 +4584,10 @@ class ChatMessageModel {
         $current_mobile_network = $this->identifyMobileNetwork($mobile_number);
         switch ($current_mobile_network) {
             case "GLOBE":
-                $current_mobile_gsm_id = 8;
+                $current_mobile_gsm_id = 2;
                 break;
             case "SMART":
-                $current_mobile_gsm_id = 9;
-                break;
-            case "UNKNOWN":
-                $current_mobile_gsm_id = 0;
+                $current_mobile_gsm_id = 3;
                 break;
             default:
                 $current_mobile_gsm_id = 0;
