@@ -326,7 +326,6 @@ class ChatterBox implements MessageComponentInterface {
                 $status = [];
                 $gintag_status = [];
                 $recipients_to_tag = [];
-                $counter = 0;
                 foreach ($decodedText->recipients as $recipient) {
                     $raw = explode(" - ",$recipient);
                     $temp_org = explode(" ",$raw[0]);
@@ -338,19 +337,20 @@ class ChatterBox implements MessageComponentInterface {
 
                     $mobile_details = $this->chatModel->getMobileDetails($name_data);
                     foreach ($mobile_details as $detail) {
-                        $counter++;
+
                         $send_status = $this->chatModel->sendSms([$detail["mobile_id"]],$decodedText->msg);
                         $temp = [
                             "status" => $send_status['data'],
                             "recipient" => $recipient
                         ];
                         $temp_site = $temp_org[0];
+
+                        foreach ($send_status['convo_id'] as $convo_id) {
+                            array_push($gintag_status, $this->chatModel->autoTagMessage($decodedText->account_id,$convo_id,$send_status['timestamp']));
+                        }
+
                         array_push($recipients_to_tag,$temp_org[1]);
                         array_push($status,$temp);
-                    }
-
-                    foreach ($send_status['convo_id'] as $convo_id) {
-                        array_push($gintag_status, $this->chatModel->autoTagMessage($decodedText->account_id,$convo_id,$send_status['timestamp']));
                     }
                 }
                 // $this->chatModel->sendTallyUpdate($decodedText->event_category,$decodedText->event_id,$decodedText->data_timestamp, $counter);
