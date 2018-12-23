@@ -4816,9 +4816,13 @@ class ChatMessageModel {
         $extended_sites_query = "SELECT sites.site_code,public_alert_event.validity from sites INNER JOIN public_alert_event ON sites.site_id=public_alert_event.site_id WHERE public_alert_event.status = 'extended' order by sites.site_code";
         $this->checkConnectionDB($extended_sites_query);
         $result = $this->senslope_dbconn->query($extended_sites_query);
+        $cur_date = date("Y-m-d");
 
         while($row = $result->fetch_assoc()) {
+            $validity_date = substr($row['validity'],0,10);
+            if ($validity_date != $cur_date) {
                 array_push($extended_sites, $row['site_code']);
+            }
         }
 
         $final_sites = [];
