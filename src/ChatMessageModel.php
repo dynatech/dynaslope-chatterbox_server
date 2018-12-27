@@ -3499,7 +3499,7 @@ class ChatMessageModel {
 
     function getSentStatusForGroupConvos($sms_msg, $timestamp, $mobile_id) {
         $status_container = [];
-        $get_sent_status_query = 'SELECT smsoutbox_users.outbox_id as sms_id, smsoutbox_user_status.send_status as status, CONCAT(users.lastname,", ",users.firstname) as full_name FROM smsoutbox_users INNER JOIN smsoutbox_user_status ON smsoutbox_users.outbox_id = smsoutbox_user_status.outbox_id INNER JOIN user_mobile ON smsoutbox_user_status.mobile_id = user_mobile.mobile_id INNER JOIN users ON user_mobile.user_id = users.user_id WHERE ts_written = "'.$timestamp.'";';
+        $get_sent_status_query = 'SELECT smsoutbox_users.outbox_id as sms_id, smsoutbox_user_status.send_status as status, CONCAT(users.lastname,", ",users.firstname) as full_name FROM smsoutbox_users INNER JOIN smsoutbox_user_status ON smsoutbox_users.outbox_id = smsoutbox_user_status.outbox_id INNER JOIN user_mobile ON smsoutbox_user_status.mobile_id = user_mobile.mobile_id INNER JOIN users ON user_mobile.user_id = users.user_id WHERE ts_written = "'.$timestamp.'" AND sms_msg = "'.$sms_msg.'";';
         $sent_status = $this->dbconn->query($get_sent_status_query);
         if ($sent_status->num_rows !=0) {
             while ($row = $sent_status->fetch_assoc()) {
