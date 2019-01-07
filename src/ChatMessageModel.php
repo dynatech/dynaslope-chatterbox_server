@@ -95,7 +95,7 @@ class ChatMessageModel {
             $networkSmart = ['00','07','08','09','10','11','12','14','18','19','20','21','22','23','24','25','28','29','30','31',
             '32','33','34','38','39','40','42','43','44','46','47','48','49','50','89','98','99'];
 
-            $networkGlobe = ['05','06','15','16','17','25','26','27','35','36','37','45','55','56','65','75','77','78','79','94','95','96','97'];
+            $networkGlobe = ['05','06','15','16','17','25','26','27','35','36','37','45','55','56','65','67','75','77','78','79','94','95','96','97'];
 
             if (isset($curSimPrefix) == false || is_numeric($curSimPrefix) == false) {
                 return "You";
@@ -457,7 +457,7 @@ class ChatMessageModel {
 
         if($unregistered_result->num_rows > 0){
             while ($row = $unregistered_result->fetch_assoc()) {
-                $normalized_number = substr($row["sim_num"], -10);
+                $normalized_number = "63".substr($row["sim_num"], -10);
                 $all_unregistered[$counter]['unknown_label'] = strtoupper($row['full_name']);
                 $all_unregistered[$counter]['user_number'] = $normalized_number;
                 $all_unregistered[$counter]['mobile_id'] = $row['mobile_id'];
