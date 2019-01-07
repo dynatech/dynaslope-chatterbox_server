@@ -3774,8 +3774,10 @@ class ChatMessageModel {
         $execute_query = $this->dbconn->query($get_tags_query);
         if ($execute_query->num_rows > 0) {
             while ($row = $execute_query->fetch_assoc()) {
-                array_push($tags,$row['tag_name']);
-                array_push($tags_information,$row);
+                if (in_array($row['tag_name'], $tags) == false) {
+                    array_push($tags,$row['tag_name']);
+                    array_push($tags_information,$row);
+                }
             }
             $full_data['data'] = $tags;
             $full_data['tag_information'] = $tags_information;
