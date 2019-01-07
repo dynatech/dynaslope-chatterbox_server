@@ -13,13 +13,13 @@ class ChatMessageModel {
     }
 
     public function initDBforCB() {
-        $host = "192.168.150.75";
-        $usr = "pysys_local";
-        $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
+        // $host = "192.168.150.75";
+        // $usr = "pysys_local";
+        // $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
 
         $host = "localhost";
-        // $usr = "root";
-        // $pwd = "senslope";
+        $usr = "root";
+        $pwd = "senslope";
         
         $dbname = "comms_db";
         $this->dbconn = new \mysqli($host, $usr, $pwd, $dbname);
@@ -33,13 +33,13 @@ class ChatMessageModel {
     }
 
     function switchDBforCB() {
-        $host = "192.168.150.75";
-        $usr = "pysys_local";
-        $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
+        // $host = "192.168.150.75";
+        // $usr = "pysys_local";
+        // $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
 
-        // $host = "localhost";
-        // $usr = "root";
-        // $pwd = "senslope";
+        $host = "localhost";
+        $usr = "root";
+        $pwd = "senslope";
 
         $analysis_db = "senslopedb";
         $this->senslope_dbconn = new \mysqli($host, $usr, $pwd, $analysis_db);
@@ -3774,8 +3774,10 @@ class ChatMessageModel {
         $execute_query = $this->dbconn->query($get_tags_query);
         if ($execute_query->num_rows > 0) {
             while ($row = $execute_query->fetch_assoc()) {
-                array_push($tags,$row['tag_name']);
-                array_push($tags_information,$row);
+                if (in_array($row['tag_name'], $tags) == false) {
+                    array_push($tags,$row['tag_name']);
+                    array_push($tags_information,$row);
+                }
             }
             $full_data['data'] = $tags;
             $full_data['tag_information'] = $tags_information;
