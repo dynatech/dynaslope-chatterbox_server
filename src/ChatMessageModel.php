@@ -17,7 +17,7 @@ class ChatMessageModel {
         $usr = "pysys_local";
         $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
 
-        $host = "localhost";
+        // $host = "localhost";
         // $usr = "root";
         // $pwd = "senslope";
         
