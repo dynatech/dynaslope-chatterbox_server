@@ -235,6 +235,10 @@ class ChatterBox implements MessageComponentInterface {
                 $exchanges = $this->chatModel->fetchSmsTags($decodedText->data);
                 $exchanges['sites'] = $this->chatModel->getUserAndSiteAssociationViaMobile_id($decodedText->mobile_id);
                 $from->send(json_encode($exchanges));
+            } else if ($msgType == "deleteTags") {
+                echo "Deleting SMS tags.\n";
+                $exchanges = $this->chatModel->deleteTags($decodedText->data);
+                $from->send(json_encode($exchanges));
             } else if ($msgType == "getRoutineSites") {
                 echo "Fetching Sites for Routine";
                 $exchanges = $this->chatModel->fetchSitesForRoutine();

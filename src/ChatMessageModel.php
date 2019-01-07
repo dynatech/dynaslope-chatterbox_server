@@ -3769,13 +3769,18 @@ class ChatMessageModel {
 
     function fetchSmsTags($sms_id) {
         $tags = [];
+        $tags_information = [];
         $get_tags_query = "SELECT * FROM gintags INNER JOIN gintags_reference ON tag_id_fk = gintags_reference.tag_id WHERE table_element_id = '".$sms_id."';";
         $execute_query = $this->dbconn->query($get_tags_query);
         if ($execute_query->num_rows > 0) {
             while ($row = $execute_query->fetch_assoc()) {
-                array_push($tags,$row['tag_name']);
+                if (in_array($row['tag_name'], $tags) == false) {
+                    array_push($tags,$row['tag_name']);
+                    array_push($tags_information,$row);
+                }
             }
             $full_data['data'] = $tags;
+            $full_data['tag_information'] = $tags_information;
         } else {
             $full_data['data'] = [];
         }
@@ -3795,6 +3800,17 @@ class ChatMessageModel {
             $full_data['status'] = true;
         }
         
+        return $full_data;
+    }
+
+    function deleteTags($data){
+        foreach ($data as $gintags_id) {
+            $delete_tag = "DELETE FROM gintags WHERE gintags_id = '".$gintags_id."'";
+            $execute_query = $this->dbconn->query($delete_tag);
+        }
+
+        $full_data['status'] = true;
+        $full_data['type'] = "deleteTagStatus";
         return $full_data;
     }
 
