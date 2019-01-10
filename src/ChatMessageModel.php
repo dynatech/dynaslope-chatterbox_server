@@ -13,13 +13,13 @@ class ChatMessageModel {
     }
 
     public function initDBforCB() {
-        $host = "192.168.150.75";
-        $usr = "pysys_local";
-        $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
+        // $host = "192.168.150.75";
+        // $usr = "pysys_local";
+        // $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
 
-        // $host = "localhost";
-        // $usr = "root";
-        // $pwd = "senslope";
+        $host = "localhost";
+        $usr = "root";
+        $pwd = "senslope";
         
         $dbname = "comms_db";
         $this->dbconn = new \mysqli($host, $usr, $pwd, $dbname);
@@ -33,13 +33,13 @@ class ChatMessageModel {
     }
 
     function switchDBforCB() {
-        $host = "192.168.150.75";
-        $usr = "pysys_local";
-        $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
+        // $host = "192.168.150.75";
+        // $usr = "pysys_local";
+        // $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
 
-        // $host = "localhost";
-        // $usr = "root";
-        // $pwd = "senslope";
+        $host = "localhost";
+        $usr = "root";
+        $pwd = "senslope";
 
         $analysis_db = "senslopedb";
         $this->senslope_dbconn = new \mysqli($host, $usr, $pwd, $analysis_db);
@@ -2370,6 +2370,7 @@ class ChatMessageModel {
         $returnLandline = [];
         $returnEwiStatus = [];
         $returnOrg = [];
+        $siteIds = [];
         $ctr = 0;
         $this->checkConnectionDB();
 
@@ -2414,6 +2415,7 @@ class ChatMessageModel {
                     $returnOrg[$ctr]['org_scope'] = $row['scope'];
                     $returnOrg[$ctr]['site_code'] = strtoupper($row['site_code']);
                     $returnOrg[$ctr]['org_psgc_source'] = $row['psgc_source'];
+                    array_push($siteIds, $row['site_id']);
                     $ctr++;
                 } else {
                     $returnMobile[$ctr]['number_id'] = $row['mobile_id'];
@@ -2432,6 +2434,7 @@ class ChatMessageModel {
                     $returnOrg[$ctr]['org_scope'] = $row['scope'];
                     $returnOrg[$ctr]['site_code'] = strtoupper($row['site_code']);
                     $returnOrg[$ctr]['org_psgc_source'] = $row['psgc_source'];
+                    array_push($siteIds, $row['site_id']);
                     $ctr++;
                 }
             }
@@ -2467,12 +2470,29 @@ class ChatMessageModel {
         $returnData['landline_data'] = $finLandline;
         $returnData['ewi_data'] = $finEwi;
         $returnData['org_data'] = $finOrg;
+        $returnData['site_ids'] = $siteIds;
+        $returnData['has_heirarchy'] = $this->getContactPriority($id);
         $returnData['list_of_sites'] = $this->getAllSites();
         $returnData['list_of_orgs'] = $this->getAllOrganization();
         $returnObj['data'] = $returnData;
         $returnObj['type'] = "fetchedSelectedCmmtyContact";
-
         return $returnObj;
+    }
+
+    function getContactPriority($id){
+        $query = "SELECT * FROM contact_hierarchy WHERE fk_user_id = '$id';";
+        $result = $this->dbconn->query($query);
+        $hierarchy_data = [];
+        $ctr = 0;
+        if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $hierarchy_data[$ctr] = $row;
+                $ctr++;
+            }
+            return $hierarchy_data;
+        }else{
+            return false;
+        }
     }
 
     function getUnregisteredNumber($id){
