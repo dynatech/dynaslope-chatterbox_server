@@ -2370,8 +2370,8 @@ class ChatMessageModel {
         $returnLandline = [];
         $returnEwiStatus = [];
         $returnOrg = [];
-        $siteIds = [];
         $ctr = 0;
+        $site_id = null;
         $this->checkConnectionDB();
 
         // EWI status checker.
@@ -2415,7 +2415,6 @@ class ChatMessageModel {
                     $returnOrg[$ctr]['org_scope'] = $row['scope'];
                     $returnOrg[$ctr]['site_code'] = strtoupper($row['site_code']);
                     $returnOrg[$ctr]['org_psgc_source'] = $row['psgc_source'];
-                    array_push($siteIds, $row['site_id']);
                     $ctr++;
                 } else {
                     $returnMobile[$ctr]['number_id'] = $row['mobile_id'];
@@ -2434,8 +2433,11 @@ class ChatMessageModel {
                     $returnOrg[$ctr]['org_scope'] = $row['scope'];
                     $returnOrg[$ctr]['site_code'] = strtoupper($row['site_code']);
                     $returnOrg[$ctr]['org_psgc_source'] = $row['psgc_source'];
-                    array_push($siteIds, $row['site_id']);
                     $ctr++;
+                }
+
+                if($site_id == null){
+                    $site_id = $row['site_id'];
                 }
             }
         } else {
@@ -2470,8 +2472,8 @@ class ChatMessageModel {
         $returnData['landline_data'] = $finLandline;
         $returnData['ewi_data'] = $finEwi;
         $returnData['org_data'] = $finOrg;
-        $returnData['site_ids'] = $siteIds;
-        $returnData['has_heirarchy'] = $this->getContactPriority($id);
+        $returnData['site_id'] = $site_id;
+        $returnData['has_hierarchy'] = $this->getContactPriority($id,$site_id);
         $returnData['list_of_sites'] = $this->getAllSites();
         $returnData['list_of_orgs'] = $this->getAllOrganization();
         $returnObj['data'] = $returnData;
@@ -2493,6 +2495,78 @@ class ChatMessageModel {
         }else{
             return false;
         }
+    }
+
+    function insertInitialHierarchy($site_id, $user_id){
+        $select_query = "SELECT * FROM user_organization WHERE user_id = $user_id AND fk_site_id = $site_id LIMIT 1;";
+        $select_result = $this->dbconn->query($select_query);
+        $org_id = null;
+        $last_inserted_id = 0;
+
+        if($org_id == null){
+            $row = $select_result->fetch_assoc();
+            $org_id = $row['org_id'];
+
+            $query = "SELECT * FROM contact_hierarchy WHERE fk_site_id = $site_id ORDER BY contact_hierarchy_id DESC LIMIT 1";
+            $query_result = $this->dbconn->query($query);
+
+            if($query_result->num_rows > 0){
+                while ($row = $query_result->fetch_assoc()) {
+                    $latest_priority = $row['priority'] + 1;
+                    $insert_with_priority_query = "INSERT INTO contact_hierarchy VALUES(0,'$user_id','$org_id',$latest_priority, $site_id);";
+                    $insert_with_priority_result = $this->dbconn->query($insert_with_priority_query);
+                }
+            }else{
+                $insert_query = "INSERT INTO contact_hierarchy VALUES(0,'$user_id','$org_id',1, $site_id);";
+                $insert_result = $this->dbconn->query($insert_query);
+            }
+        }
+    }
+
+    function getSiteContactHierarchy($site_id, $user_id){
+        $contact_hierarchy = [];
+        $full_data['type'] = 'fetchContactHierarchy';
+        $counter = 0;
+        $query = "SELECT
+                    contact_hierarchy.contact_hierarchy_id,
+                    contact_hierarchy.fk_user_organization_id,
+                    user_organization.fk_site_id,
+                    user_organization.user_id,
+                    contact_hierarchy.priority,
+                    user_organization.org_name,
+                    users.firstname AS first_name,
+                    users.lastname AS last_name,
+                    UPPER(sites.site_code) as site_code
+                FROM
+                    contact_hierarchy
+                JOIN user_organization ON user_organization.org_id = contact_hierarchy.fk_user_organization_id
+                JOIN users ON users.user_id = contact_hierarchy.fk_user_id
+                JOIN sites ON sites.site_id = user_organization.fk_site_id
+                WHERE
+                    user_organization.fk_site_id = $site_id;";
+        $result = $this->dbconn->query($query);
+
+        if($result->num_rows > 0){
+            while ($row = $result->fetch_assoc()) {
+                if($user_id != $row['user_id']){
+                    $contact_hierarchy[$counter]['contact_hierarchy_id'] = $row['contact_hierarchy_id'];
+                    $contact_hierarchy[$counter]['user_organization_id'] = $row['fk_user_organization_id'];
+                    $contact_hierarchy[$counter]['site_id'] = $row['fk_site_id'];
+                    $contact_hierarchy[$counter]['priority'] = $row['priority'];
+                    $contact_hierarchy[$counter]['org_name'] = $row['org_name'];
+                    $contact_hierarchy[$counter]['first_name'] = $row['first_name'];
+                    $contact_hierarchy[$counter]['last_name'] = $row['last_name'];
+                    $contact_hierarchy[$counter]['site_code'] = $row['site_code'];
+                    $counter++;
+                }
+            }
+            $full_data['data'] = $contact_hierarchy;
+        }   else {
+            echo "0 results\n";
+            $full_data['data'] = null;
+        }
+
+        return $this->utf8_encode_recursive($full_data);
     }
 
     function getUnregisteredNumber($id){

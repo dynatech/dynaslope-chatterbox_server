@@ -523,6 +523,15 @@ class ChatterBox implements MessageComponentInterface {
                 $last_outbox_ts = $decodedText->last_outbox_ts;
                 $exchanges = $this->chatModel->getOldMessageConversations($last_inbox_ts, $last_outbox_ts, $recipients);
                 $from->send(json_encode($exchanges));
+            } else if ($msgType == "saveContactHierarchy") {
+                $site_id = $decodedText->site_id;
+                $user_id = $decodedText->user_id;
+                $exchanges = $this->chatModel->insertInitialHierarchy($site_id,$user_id);
+            } else if ($msgType == "checkIfHasExistingContactPriority") {
+                $site_id = $decodedText->site_id;
+                $user_id = $decodedText->user_id;
+                $exchanges = $this->chatModel->getSiteContactHierarchy($site_id, $user_id);
+                $from->send(json_encode($exchanges));
             } else {
                 echo "Message will be ignored\n";
             }
