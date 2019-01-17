@@ -537,6 +537,16 @@ class ChatterBox implements MessageComponentInterface {
             } else if ($msgType == "updateContactHierarchy") {
                 $data = $decodedText->data;
                 $exchanges = $this->chatModel->updateContactHierarchy($data);
+            } else if ($msgType == "callLogMessage") {
+                $data = $decodedText->data;
+                $recipients = $decodedText->recipients;
+                $exchanges = $this->chatModel->callLogs($data,$recipients);
+                foreach ($this->clients as $client) {
+                    if ($from !== $client) {
+                        $client->send(json_encode($exchanges));
+                    }
+                }
+                $from->send(json_encode($exchanges));
             } else {
                 echo "Message will be ignored\n";
             }
