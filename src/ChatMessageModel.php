@@ -3740,6 +3740,65 @@ class ChatMessageModel {
         return $result;
     }
 
+    function callLogs($data, $recipients){
+        $sms_status_container = [];
+        $convo_id_container = [];
+        foreach ($recipients as $recipient) {
+            // $message = str_replace('"','\"',$data->message);
+            $insert_smsoutbox_query = 'INSERT INTO smsoutbox_users VALUES (0,"'.$data->timestamp.'","central","'.$data->message.'")';
+        $smsoutbox = $this->dbconn->query($insert_smsoutbox_query);
+            array_push($convo_id_container, $this->dbconn->insert_id);
+            if ($smsoutbox == true) {
+                $insert_smsoutbox_status = "INSERT INTO smsoutbox_user_status VALUES (0,'".$this->dbconn->insert_id."','".$recipient."','".$data->timestamp."',-1,0,'".$this->getGsmId($recipient)."')";      
+                $smsoutbox_status = $this->dbconn->query($insert_smsoutbox_status);
+                if ($smsoutbox_status == true) {
+                    $stats = [
+                        "status" => $smsoutbox_status,
+                        "mobile_id" => $recipient
+                    ];
+                    array_push($sms_status_container, $stats);
+                } else {
+                    return -1;
+                }
+            } else {
+                return -1;
+            }
+        }
+
+        $result = [
+            "type" => "callLogSaved",
+            "isYou" => 1,
+            "mobile_id" => $sms_status_container[0]['mobile_id'],
+            "read_status" => null,
+            "send_status" => 0,
+            "timestamp" => $data->timestamp,
+            "ts_sent" => $data->timestamp,
+            "ts_written" => $data->timestamp,
+            "ts_received" => null,
+            "user" => "You",
+            "web_status" => null,
+            "gsm_id" => 1,
+            "convo_id" => $convo_id_container,
+            "sms_msg" => $data->message,
+            "data" => $sms_status_container,
+            "account_id" => $data->tagger_user_id
+        ];
+
+        $tag_data = [
+            "recipients" => $recipients,
+            "tag" => "#EwiCallAck",
+            "full_name" => "You",
+            "ts" => $data->timestamp,
+            "time_sent" => "",
+            "msg" => $data->message,
+            "account_id" => $data->tagger_user_id,
+            "tag_important" => true,
+            "site_code" => $data->site_code,
+        ];
+        $this->tagMessage($tag_data);
+        return $result;
+    }
+
     function getGsmId($mobile_id) {
         $gsm_id_query = "SELECT gsm_id FROM user_mobile WHERE mobile_id = '".$mobile_id."'";
         $gsm_container = $this->dbconn->query($gsm_id_query);
@@ -3924,10 +3983,12 @@ class ChatMessageModel {
     }
 
     function tagToNarratives($data) {
+        // var_dump($data);
         $event_container = [];
         $offices = [];
         $result = null;
         if (isset($data['sms_id']) == true) {
+            echo "SMS ID";
             $insert_tag_status = $this->insertTag($data);
             if ($insert_tag_status['status'] == true) {
                 $time_sent = null;
@@ -3955,7 +4016,6 @@ class ChatMessageModel {
             }
 
         } else {
-
             $insert_tag_status = $this->insertTag($data);
             if ($insert_tag_status['status'] == true) {
                 $filter_builder = "";
@@ -3982,7 +4042,12 @@ class ChatMessageModel {
 
                 if (sizeOf($event_container) != 0) {
                     $narrative_input = $this->getNarrativeInput($data['tag']);
-                    $template = $narrative_input->fetch_assoc()['narrative_input'];
+                    if($data['tag'] == "#EwiCallAck"){
+                        $template = $data['msg'];
+                    }else{
+                        $template = $narrative_input->fetch_assoc()['narrative_input'];
+                    }
+                    
                     $get_offices_query = "SELECT DISTINCT org_name FROM comms_db.user_mobile INNER JOIN user_organization ON user_mobile.user_id = user_organization.user_id INNER JOIN sites ON user_organization.fk_site_id = sites.site_id WHERE ".$filter_builder.";";
                     $get_office = $this->dbconn->query($get_offices_query);
                     while ($row = $get_office->fetch_assoc()) {
