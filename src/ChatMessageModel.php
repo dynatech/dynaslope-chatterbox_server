@@ -3988,7 +3988,6 @@ class ChatMessageModel {
         $offices = [];
         $result = null;
         if (isset($data['sms_id']) == true) {
-            echo "SMS ID";
             $insert_tag_status = $this->insertTag($data);
             if ($insert_tag_status['status'] == true) {
                 $time_sent = null;
@@ -4007,7 +4006,7 @@ class ChatMessageModel {
                 // $time_sent = $this->setTimeSent($data['ts'], $data['time_sent']);
                 foreach ($event_container as $sites) {
                     $narrative = $this->parseTemplateCodes($offices, $sites['site_id'], $data['ts'], $time_sent, $template, $data['msg'], $data['full_name']);
-                    $sql = "INSERT INTO narratives VALUES(0,'".$sites['event_id']."','".$data['ts']."','".$narrative."')";
+                    $sql = "INSERT INTO narratives VALUES(0,'".$sites['site_id']."','".$sites['event_id']."','".$data['ts']."','".$narrative."')";
                     $result = $this->senslope_dbconn->query($sql);
                 }
 
@@ -4055,7 +4054,7 @@ class ChatMessageModel {
                     }
                     foreach ($event_container as $sites) {
                         $narrative = $this->parseTemplateCodes($offices, $sites['site_id'], $data['ts'], $data['time_sent'], $template, $data['msg']);
-                        $sql = "INSERT INTO narratives VALUES(0,'".$sites['event_id']."','".$data['ts']."','".$narrative."')";
+                        $sql = "INSERT INTO narratives VALUES(0,'".$sites['site_id']."','".$sites['event_id']."','".$data['ts']."','".$narrative."')";
                         $result = $this->senslope_dbconn->query($sql);
                     }
                 }
