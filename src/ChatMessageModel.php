@@ -13,13 +13,13 @@ class ChatMessageModel {
     }
 
     public function initDBforCB() {
-        $host = "192.168.150.75";
-        $usr = "pysys_local";
-        $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
+        // $host = "192.168.150.75";
+        // $usr = "pysys_local";
+        // $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
 
-        // $host = "localhost";
-        // $usr = "root";
-        // $pwd = "senslope";
+        $host = "localhost";
+        $usr = "root";
+        $pwd = "senslope";
         
         $dbname = "comms_db";
         $this->dbconn = new \mysqli($host, $usr, $pwd, $dbname);
@@ -33,13 +33,13 @@ class ChatMessageModel {
     }
 
     function switchDBforCB() {
-        $host = "192.168.150.75";
-        $usr = "pysys_local";
-        $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
+        // $host = "192.168.150.75";
+        // $usr = "pysys_local";
+        // $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
 
-        // $host = "localhost";
-        // $usr = "root";
-        // $pwd = "senslope";
+        $host = "localhost";
+        $usr = "root";
+        $pwd = "senslope";
 
         $analysis_db = "senslopedb";
         $this->senslope_dbconn = new \mysqli($host, $usr, $pwd, $analysis_db);
@@ -3780,7 +3780,8 @@ class ChatMessageModel {
             "gsm_id" => 1,
             "convo_id" => $convo_id_container,
             "sms_msg" => $data->message,
-            "data" => $sms_status_container
+            "data" => $sms_status_container,
+            "account_id" => $data->tagger_user_id
         ];
 
         $tag_data = [
