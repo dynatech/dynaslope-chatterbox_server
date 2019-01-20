@@ -3992,7 +3992,11 @@ class ChatMessageModel {
             if ($insert_tag_status['status'] == true) {
                 $time_sent = null;
                 $narrative_input = $this->getNarrativeInput($data['tag']);
-                $template = $narrative_input->fetch_assoc()['narrative_input'];
+                if($data['tag'] == "#EwiCallAck"){
+                    $template = $data['msg'];
+                }else{
+                    $template = $narrative_input->fetch_assoc()['narrative_input'];
+                }
                 $raw_office = explode(" ",$data['full_name']);
                 $office = [$raw_office[1]];
                 $get_ongoing_query = "SELECT site_code,sites.site_id,event_id FROM senslopedb.public_alert_event INNER JOIN sites ON public_alert_event.site_id = sites.site_id where status = 'on-going';";
@@ -4160,14 +4164,14 @@ class ChatMessageModel {
                     $previous_release_time = "onset";
                 }
                 $no_ack_narrative = $this->parseTemplateCodes($offices, $site_id, $data_timestamp, $previous_release_time, $no_ack_template, $msg);
-                $sql = "INSERT INTO narratives VALUES(0,'".$event_id."','".$timestamp_release_date."','".$no_ack_narrative."')";
+                $sql = "INSERT INTO narratives VALUES(0,'".$site_id."','".$event_id."','".$timestamp_release_date."','".$no_ack_narrative."')";
                 $this->senslope_dbconn->query($sql);
             }
         }
 
         $narrative = $this->parseTemplateCodes($offices, $site_id, $data_timestamp, $timestamp, $template, $msg);
         if ($template != "") {
-            $sql = "INSERT INTO narratives VALUES(0,'".$event_id."','".date("Y-m-d H:i:s")."','".$narrative."')";
+            $sql = "INSERT INTO narratives VALUES(0,'".$site_id."','".$event_id."','".date("Y-m-d H:i:s")."','".$narrative."')";
             $result = $this->senslope_dbconn->query($sql);
         } else {
             $result = false;
