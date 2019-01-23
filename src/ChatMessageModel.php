@@ -20,6 +20,10 @@ class ChatMessageModel {
         // $host = "localhost";
         // $usr = "root";
         // $pwd = "senslope";
+
+        // $host = "192.168.150.253";
+        // $usr = "root";
+        // $pwd = "senslope";
         
         $dbname = "comms_db";
         $this->dbconn = new \mysqli($host, $usr, $pwd, $dbname);
@@ -38,6 +42,10 @@ class ChatMessageModel {
         $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
 
         // $host = "localhost";
+        // $usr = "root";
+        // $pwd = "senslope";
+
+        // $host = "192.168.150.253";
         // $usr = "root";
         // $pwd = "senslope";
 
@@ -3423,7 +3431,6 @@ class ChatMessageModel {
         $outbox_query = "SELECT smsoutbox_users.outbox_id as convo_id, mobile_id,
                         null as ts_received, ts_written, ts_sent, sms_msg , null as read_status,
                         web_status, gsm_id , send_status , ts_written as timestamp, 'You' as user FROM smsoutbox_users INNER JOIN smsoutbox_user_status ON smsoutbox_users.outbox_id = smsoutbox_user_status.outbox_id WHERE ".$outbox_builder."";
-
 
         $full_query = "SELECT * FROM (".$inbox_query." UNION ".$outbox_query.") as full_contact group by timestamp order by timestamp desc limit 20;";
 
