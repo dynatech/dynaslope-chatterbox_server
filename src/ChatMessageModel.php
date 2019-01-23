@@ -4199,6 +4199,20 @@ class ChatMessageModel {
         return $status;
     }
 
+    function routineNarrative ($site_id, $timestamp){
+        // $timestamp = date("Y-m-d 12:05:00", time());
+        $start_time = date("Y-m-d 12:00:00", time());
+        $end_time = date("Y-m-d 13:00:00", time());
+        $check_narrative_query = "SELECT * FROM narratives WHERE site_id = '".$site_id."' AND narrative LIKE '%Sent Routine Message to LEWC, BLGU, MLGU%' AND timestamp >= '".$start_time."' AND timestamp <= '".$end_time."';";
+        $narrative_checker_result = $this->senslope_dbconn->query($check_narrative_query);
+        if ($narrative_checker_result->num_rows == 0) {
+            if($timestamp >= $start_time && $timestamp <= $end_time){
+                $sql = "INSERT INTO narratives VALUES(0,'".$site_id."',NULL,'".$timestamp."','Sent Routine Message to LEWC, BLGU, MLGU')";
+                $this->senslope_dbconn->query($sql);
+            }
+        }
+    }
+
     function getNarrativeInput($tag) {
         $get_tag_narrative = "SELECT narrative_input FROM comms_db.gintags_manager INNER JOIN gintags_reference ON gintags_manager.tag_id_fk = gintags_reference.tag_id WHERE gintags_reference.tag_name = '".$tag."';";
         $narrative_input = $this->dbconn->query($get_tag_narrative);
