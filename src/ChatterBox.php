@@ -494,7 +494,7 @@ class ChatterBox implements MessageComponentInterface {
                             if (strtoupper($site_event['site_code']) == strtoupper($decodedText->sitenames[0])) {
                                 $site_details = $this->chatModel->getSiteDetails($site_event['site_code']);
                                 $auto_narrative = $this->chatModel->autoNarrative(['LEWC'],$site_event['event_id'],$site_details['site_id'],date("Y-m-d H:i:s", time()),date("Y-m-d H:i:s", time()),"#GroundMeasReminder",$decodedText->msg);
-                                $this->chatModel->sendTallyUpdate("gndmeas_reminder",$site_event['event_id'],$site_event['data_timestamp'], $counter);
+                                // $this->chatModel->sendTallyUpdate("gndmeas_reminder",$site_event['event_id'],$site_event['data_timestamp'], $counter);
                             }
 
                         }
