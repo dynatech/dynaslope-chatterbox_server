@@ -4806,15 +4806,15 @@ class ChatMessageModel {
     }
 
     function getGroundMeasurementsForToday() {
-        if (strtotime(date('h:i A')) > strtotime('7:30 AM') && strtotime(date('h:m A')) < strtotime('11:30 AM')) {
-            $ground_time = '11:30 AM';
-            $current_date = date_format(date_sub(date_create(date('Y-m-d ').$ground_time),date_interval_create_from_date_string("4 hours")),"Y-m-d H:i:s");
-        } else if (strtotime(date('h:i A')) > strtotime('11:30 AM') && strtotime(date('h:i A')) < strtotime('2:30 PM')) {
-            $ground_time = '3:30 PM';
-            $current_date = date_format(date_sub(date_create(date('Y-m-d ').$ground_time),date_interval_create_from_date_string("4 hours")),"Y-m-d H:i:s");
+        if (strtotime(date('H:i')) > strtotime('08:00') && strtotime(date('H:i')) < strtotime('12:00')) {
+            $ground_time = '12:00';
+            $current_date = date_format(date_sub(date_create(date('Y-m-d').$ground_time),date_interval_create_from_date_string("4 hours")),"Y-m-d H:i:s");
+        } else if (strtotime(date('H:i')) > strtotime('12:01') && strtotime(date('H:i')) < strtotime('16:00')) {
+            $ground_time = '16:00';
+            $current_date = date_format(date_sub(date_create(date('Y-m-d').$ground_time),date_interval_create_from_date_string("4 hours")),"Y-m-d H:i:s");
         } else {
-            $ground_time = '7:30 AM';
-            $current_date = date_format(date_sub(date_create(date('Y-m-d ').$ground_time),date_interval_create_from_date_string("4 hours")),"Y-m-d H:i:s");
+            $ground_time = '8:00';
+            $current_date = date_format(date_sub(date_create(date('Y-m-d').$ground_time),date_interval_create_from_date_string("4 hours")),"Y-m-d H:i:s");
         }
 
         $gndmeas_sent_sites = [];
