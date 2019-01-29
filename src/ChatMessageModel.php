@@ -5,56 +5,34 @@ use Ratchet\ConnectionInterface;
 
 class ChatMessageModel {
     protected $dbconn;
-
     public function __construct() {
-        $this->initDBforCB();
-        $this->switchDBforCB();
+        $db_credentials = include(__DIR__."/../utils/config.php");
+        $this->initDBforCB($db_credentials);
+        $this->switchDBforCB($db_credentials);
         date_default_timezone_set('Asia/Manila');
     }
 
-    public function initDBforCB() {
-        $host = "192.168.150.75";
-        $usr = "pysys_local";
-        $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
+    public function initDBforCB($credentials) {
+        $this->dbconn = new \mysqli($credentials['cbx_cred']['dbhost'], $credentials['cbx_cred']['dbuser'], 
+            $credentials['cbx_cred']['dbpass'], $credentials['cbx_cred']['dbnamecomms']);
 
-        // $host = "localhost";
-        // $usr = "root";
-        // $pwd = "senslope";
-
-        // $host = "192.168.150.253";
-        // $usr = "root";
-        // $pwd = "senslope";
-        
-        $dbname = "comms_db";
-        $this->dbconn = new \mysqli($host, $usr, $pwd, $dbname);
         if ($this->dbconn->connect_error) {
             die("Connection failed: " . $this->dbconn->connect_error);
         } else {
-            echo $host . "\n";
+            echo $credentials['cbx_cred']['dbhost'] . "\n";
             echo "Connection Established for comms_db... \n";
             return true;
         }
     }
 
-    function switchDBforCB() {
-        $host = "192.168.150.75";
-        $usr = "pysys_local";
-        $pwd = "NaCAhztBgYZ3HwTkvHwwGVtJn5sVMFgg";
+    function switchDBforCB($credentials) {
+        $this->senslope_dbconn = new \mysqli($credentials['cbx_cred']['dbhost'], $credentials['cbx_cred']['dbuser'], 
+            $credentials['cbx_cred']['dbpass'], $credentials['cbx_cred']['dbnamesenslope']);
 
-        // $host = "localhost";
-        // $usr = "root";
-        // $pwd = "senslope";
-
-        // $host = "192.168.150.253";
-        // $usr = "root";
-        // $pwd = "senslope";
-
-        $analysis_db = "senslopedb";
-        $this->senslope_dbconn = new \mysqli($host, $usr, $pwd, $analysis_db);
         if ($this->senslope_dbconn->connect_error) {
             die("Connection failed: " . $this->senslope_dbconn->connect_error);
         } else {
-            echo $host . "\n";
+            echo $credentials['cbx_cred']['dbhost'] . "\n";
             echo "Connection Established for senslopedb... \n";
             return true;
         }
@@ -2212,6 +2190,7 @@ class ChatMessageModel {
         $returnData = [];
         $ctr = 0;
         $query = "SELECT DISTINCT users.user_id,users.firstname,users.lastname,users.middlename,users.salutation,users.status FROM users INNER JOIN user_organization ON users.user_id = user_organization.user_id;";
+
         $result = $this->dbconn->query($query);
         if ($result->num_rows > 0) {
             while($row = $result->fetch_assoc()) {
@@ -2723,9 +2702,9 @@ class ChatMessageModel {
                             $result = $this->dbconn->query($num_exist);
 
                             /* Update user_ewi_status */
-                            if ($data->ewi_recipient == "") {
+                            if ($data->ewi_recipient == "" || $data->ewi_recipient == 0) {
                                 try {
-                                    $update_existing = "UPDATE user_ewi_status SET status='".$data->numbers[$num_counter]->mobile_status."', remarks='Inactive' WHERE users_id = '".$data->user_id."' AND mobile_id='".$data->numbers[$num_counter]->mobile_id."'";
+                                    $update_existing = "UPDATE user_ewi_status SET status='0', remarks='Inactive' WHERE users_id = '".$data->user_id."' AND mobile_id='".$data->numbers[$num_counter]->mobile_id."'";
                                     $result = $this->dbconn->query($update_existing);
                                 } catch (Exception $e) {
                                     $flag = false;
@@ -2733,7 +2712,7 @@ class ChatMessageModel {
                                 }
                             } else {
                                 try {
-                                    $update_existing = "UPDATE user_ewi_status SET status='".$data->numbers[$num_counter]->mobile_status."', remarks='Active' WHERE users_id = '".$data->user_id."' AND mobile_id='".$data->numbers[$num_counter]->mobile_id."'";
+                                    $update_existing = "UPDATE user_ewi_status SET status='1', remarks='Active' WHERE users_id = '".$data->user_id."' AND mobile_id='".$data->numbers[$num_counter]->mobile_id."'";
                                     $result = $this->dbconn->query($update_existing);
                                 } catch (Exception $e) {
                                     $flag = false;
@@ -3641,7 +3620,7 @@ class ChatMessageModel {
             }
         }
 
-        $mobile_data_query = "SELECT * FROM user_organization INNER JOIN users ON user_organization.user_id = users.user_id INNER JOIN user_mobile ON user_mobile.user_id = users.user_id INNER JOIN sites ON sites.site_id = '".$site."' WHERE ".$site_office_query.";";
+        $mobile_data_query = "SELECT * FROM user_organization INNER JOIN users ON user_organization.user_id = users.user_id INNER JOIN user_ewi_status ON user_organization.user_id = user_ewi_status.users_id INNER JOIN user_mobile ON user_mobile.user_id = users.user_id INNER JOIN sites ON sites.site_id = '".$site."' WHERE user_ewi_status.status = '1' AND ".$site_office_query.";";
 
         $mobile_number = $this->dbconn->query($mobile_data_query);
         while ($row = $mobile_number->fetch_assoc()) {
@@ -3751,8 +3730,7 @@ class ChatMessageModel {
         $sms_status_container = [];
         $convo_id_container = [];
         foreach ($recipients as $recipient) {
-            // $message = str_replace('"','\"',$data->message);
-            $insert_smsoutbox_query = 'INSERT INTO smsoutbox_users VALUES (0,"'.$data->timestamp.'","central","'.$data->message.'")';
+        $insert_smsoutbox_query = 'INSERT INTO smsoutbox_users VALUES (0,"'.$data->timestamp.'","central","'.$data->message.'")';
         $smsoutbox = $this->dbconn->query($insert_smsoutbox_query);
             array_push($convo_id_container, $this->dbconn->insert_id);
             if ($smsoutbox == true) {
