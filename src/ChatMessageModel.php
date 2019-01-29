@@ -3781,6 +3781,7 @@ class ChatMessageModel {
             "site_code" => $data->site_code,
         ];
         $this->tagMessage($tag_data);
+
         return $result;
     }
 
@@ -3972,13 +3973,15 @@ class ChatMessageModel {
         $event_container = [];
         $offices = [];
         $result = null;
+        $message = str_replace("'","\'",$data['msg']);
+
         if (isset($data['sms_id']) == true) {
             $insert_tag_status = $this->insertTag($data);
             if ($insert_tag_status['status'] == true) {
                 $time_sent = null;
                 $narrative_input = $this->getNarrativeInput($data['tag']);
                 if($data['tag'] == "#EwiCallAck"){
-                    $template = $data['msg'];
+                    $template = $message;
                 }else{
                     $template = $narrative_input->fetch_assoc()['narrative_input'];
                 }
@@ -3994,7 +3997,7 @@ class ChatMessageModel {
                 }
                 // $time_sent = $this->setTimeSent($data['ts'], $data['time_sent']);
                 foreach ($event_container as $sites) {
-                    $narrative = $this->parseTemplateCodes($offices, $sites['site_id'], $data['ts'], $time_sent, $template, $data['msg'], $data['full_name']);
+                    $narrative = $this->parseTemplateCodes($offices, $sites['site_id'], $data['ts'], $time_sent, $template, $message, $data['full_name']);
                     $sql = "INSERT INTO narratives VALUES(0,'".$sites['site_id']."','".$sites['event_id']."','".$data['ts']."','".$narrative."')";
                     $result = $this->senslope_dbconn->query($sql);
                 }
@@ -4031,7 +4034,7 @@ class ChatMessageModel {
                 if (sizeOf($event_container) != 0) {
                     $narrative_input = $this->getNarrativeInput($data['tag']);
                     if($data['tag'] == "#EwiCallAck"){
-                        $template = $data['msg'];
+                        $template = $message;
                     }else{
                         $template = $narrative_input->fetch_assoc()['narrative_input'];
                     }
@@ -4041,9 +4044,10 @@ class ChatMessageModel {
                     while ($row = $get_office->fetch_assoc()) {
                         array_push($offices, $row['org_name']);
                     }
+
                     foreach ($event_container as $sites) {
-                        $narrative = $this->parseTemplateCodes($offices, $sites['site_id'], $data['ts'], $data['time_sent'], $template, $data['msg']);
-                        $sql = "INSERT INTO narratives VALUES(0,'".$sites['site_id']."','".$sites['event_id']."','".$data['ts']."','".$narrative."')";
+                        $narrative = $this->parseTemplateCodes($offices, $sites['site_id'], $data['ts'], $data['time_sent'], $template, $message);
+                        $sql = "INSERT INTO narratives VALUES(0,'".$sites['site_id']."','".$sites['event_id']."','".$data['ts']."','".$narrative."');";
                         $result = $this->senslope_dbconn->query($sql);
                     }
                 }
@@ -4082,7 +4086,8 @@ class ChatMessageModel {
             }
         }
 
-        $convo_id_query = "SELECT * FROM smsoutbox_users natural join smsoutbox_user_status where sms_msg = '".$msg."' and ts_written = '".$ts."' and (".$filter_builder.") order by ts_written desc;";
+        $message = str_replace("'","\'",$msg);
+        $convo_id_query = "SELECT * FROM smsoutbox_users natural join smsoutbox_user_status where sms_msg LIKE '%".$message."%' and ts_written = '".$ts."' and (".$filter_builder.") order by ts_written desc;";
         $execute_query = $this->dbconn->query($convo_id_query);
         while ($row = $execute_query->fetch_assoc()) {
             array_push($convo_id_container, $row['outbox_id']);
@@ -4178,15 +4183,16 @@ class ChatMessageModel {
     }
 
     function routineNarrative ($site_id, $timestamp){
-        // $timestamp = date("Y-m-d 12:05:00", time());
         $start_time = date("Y-m-d 12:00:00", time());
         $end_time = date("Y-m-d 13:00:00", time());
-        $check_narrative_query = "SELECT * FROM narratives WHERE site_id = '".$site_id."' AND narrative LIKE '%Sent Routine Message to LEWC, BLGU, MLGU%' AND timestamp >= '".$start_time."' AND timestamp <= '".$end_time."';";
-        $narrative_checker_result = $this->senslope_dbconn->query($check_narrative_query);
-        if ($narrative_checker_result->num_rows == 0) {
-            if($timestamp >= $start_time && $timestamp <= $end_time){
-                $sql = "INSERT INTO narratives VALUES(0,'".$site_id."',NULL,'".$timestamp."','Sent Routine Message to LEWC, BLGU, MLGU')";
-                $this->senslope_dbconn->query($sql);
+        if($site_id != 0){
+            $check_narrative_query = "SELECT * FROM narratives WHERE site_id = '".$site_id."' AND narrative LIKE '%Sent Routine Message to LEWC, BLGU, MLGU%' AND timestamp >= '".$start_time."' AND timestamp <= '".$end_time."';";
+            $narrative_checker_result = $this->senslope_dbconn->query($check_narrative_query);
+            if ($narrative_checker_result->num_rows == 0) {
+                if($timestamp >= $start_time && $timestamp <= $end_time){
+                    $sql = "INSERT INTO narratives VALUES(0,'".$site_id."',NULL,'".$timestamp."','Sent Routine Message to LEWC, BLGU, MLGU')";
+                    $this->senslope_dbconn->query($sql);
+                }
             }
         }
     }

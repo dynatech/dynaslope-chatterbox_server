@@ -1,5 +1,5 @@
 <?php
-	if (strpos(exec('hostname -I'), '192.168.150.80') == true) {
+	if (exec('hostname -I') == '192.168.150.80') {
 		return [
 		    "dbcredentials" => [
 			    'dbhost' => '192.168.150.75',
