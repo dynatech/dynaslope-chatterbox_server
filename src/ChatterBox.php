@@ -173,7 +173,9 @@ class ChatterBox implements MessageComponentInterface {
                 $from->send(json_encode($exchanges));
             } else if ($msgType == "sendSmsToRecipients") {
                 $exchanges = $this->chatModel->sendSms($decodedText->recipients,$decodedText->message);
-                $this->chatModel->autoTagMessage($decodedText->sender_id,$exchanges['convo_id'][0],$exchanges['timestamp']);
+                if($decodedText->is_routine == true){
+                    $this->chatModel->autoTagMessage($decodedText->sender_id,$exchanges['convo_id'][0],$exchanges['timestamp']);
+                }
                 $this->chatModel->routineNarrative($decodedText->site_id,$exchanges['timestamp']);
                 $from->send(json_encode($exchanges));
             } else if ($msgType == "newSmsInbox") {
