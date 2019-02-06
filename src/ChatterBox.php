@@ -1,4 +1,5 @@
 <?php
+
 namespace MyApp;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
@@ -18,12 +19,11 @@ class ChatterBox implements MessageComponentInterface {
     public function onOpen(ConnectionInterface $conn) {
         $this->clients->attach($conn);
         echo "New connection! ({$conn->resourceId})\n";
-
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
-        $numRecv = count($this->clients) - 1;
 
+        $numRecv = count($this->clients) - 1;
         $decodedText = (object) $this->chatModel->utf8_encode_recursive(json_decode($msg));
 
         if ($decodedText == NULL) {
