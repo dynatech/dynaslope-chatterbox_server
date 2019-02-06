@@ -1954,6 +1954,7 @@ class ChatMessageModel {
 
     function getMobileDetails($details) {
         try {
+           $mobile_number_container = [];
             if (isset($details->mobile_id) == false ) {
                 $mobile_number_query = "SELECT * FROM users NATURAL JOIN user_mobile WHERE users.firstname LIKE '%".$details['first_name']."%' AND users.lastname LIKE '%".$details['last_name']."%';";
             } else {
