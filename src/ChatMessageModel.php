@@ -426,17 +426,41 @@ class ChatMessageModel {
             $returnCmmtyContacts = [];
             $returnData = [];
             $ctr = 0;
-            $query = "SELECT DISTINCT users.user_id,users.firstname,users.lastname,users.middlename,users.salutation,users.status FROM users INNER JOIN user_organization ON users.user_id = user_organization.user_id;";
+            // $query = "SELECT DISTINCT users.user_id,users.firstname,users.lastname,users.middlename,users.salutation,users.status FROM users INNER JOIN user_organization ON users.user_id = user_organization.user_id;"; OLD QUERY
+            $query = "SELECT DISTINCT
+                        users.user_id,
+                        users.firstname,
+                        users.lastname,
+                        users.middlename,
+                        users.salutation,
+                        users.status,
+                        UPPER(user_organization.org_name) as org_name,
+                        UPPER(senslopedb.sites.site_code) as site_code,
+                        user_mobile.sim_num as mobile_number
+                    FROM
+                        users
+                            INNER JOIN
+                        user_organization ON users.user_id = user_organization.user_id
+                            INNER JOIN
+                        user_mobile ON users.user_id = user_mobile.user_id
+                            INNER JOIN
+                        senslopedb.sites ON senslopedb.sites.site_id = user_organization.fk_site_id;";
 
             $result = $this->dbconn->query($query);
             if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
                     $returnCmmtyContacts[$ctr]['user_id'] = $row['user_id'];
-                    $returnCmmtyContacts[$ctr]['salutation'] = $row['salutation'];
                     $returnCmmtyContacts[$ctr]['firstname'] = $row['firstname'];
                     $returnCmmtyContacts[$ctr]['lastname'] = $row['lastname'];
-                    $returnCmmtyContacts[$ctr]['middlename'] = $row['middlename'];
-                    $returnCmmtyContacts[$ctr]['active_status'] = $row['status'];
+                    $returnCmmtyContacts[$ctr]['site_code'] = $row['site_code'];
+                    $returnCmmtyContacts[$ctr]['org_name'] = $row['org_name'];
+                    $returnCmmtyContacts[$ctr]['mobile_number'] = $row['mobile_number'];
+                    if($row['status'] == 1){
+                        $status = "Active";
+                    }else{
+                        $status = "Inactive";
+                    }
+                    $returnCmmtyContacts[$ctr]['active_status'] = $status;
                     $ctr++;
                 }
             } else {
