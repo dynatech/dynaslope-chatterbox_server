@@ -227,7 +227,7 @@ class ChatMessageModel {
                 ORDER BY ts_sms";
 
             $full_query = "SELECT * FROM (".$get_all_sms_from_period.") as community UNION SELECT * FROM (".$get_all_sms_from_period_employee.") as employee ORDER BY ts_sms";
-
+            // echo "$full_query";
             $this->checkConnectionDB($full_query);
             $sms_result_from_period = $this->dbconn->query($full_query);
 
@@ -388,7 +388,34 @@ class ChatMessageModel {
 
     public function getContactSuggestions($queryName = "") {
         try {
-            $sql = "SELECT * FROM (SELECT UPPER(CONCAT(sites.site_code,' ',user_organization.org_name,' - ',users.lastname,', ',users.firstname)) as fullname,user_mobile.sim_num as number,users.user_id as id, user_mobile.mobile_status as status FROM users INNER JOIN user_organization ON users.user_id = user_organization.user_id RIGHT JOIN sites ON sites.site_id = user_organization.fk_site_id RIGHT JOIN user_mobile ON user_mobile.user_id = users.user_id UNION SELECT UPPER(CONCAT(dewsl_teams.team_name,' - ',users.salutation,' ',users.lastname,', ',users.firstname)) as fullname,user_mobile.sim_num as number,users.user_id as id,user_mobile.mobile_status as status FROM users INNER JOIN dewsl_team_members ON users.user_id = dewsl_team_members.users_users_id RIGHT JOIN dewsl_teams ON dewsl_team_members.dewsl_teams_team_id = dewsl_teams.team_id RIGHT JOIN user_mobile ON user_mobile.user_id = users.user_id) as fullcontact WHERE status = 1 and fullname LIKE '%$queryName%' or id LIKE '%$queryName%'";
+            $sql = "SELECT 
+                        *
+                    FROM
+                        (SELECT 
+                            UPPER(CONCAT(sites.site_code, ' ', user_organization.org_name, ' - ', users.lastname, ', ', users.firstname)) AS fullname,
+                                user_mobile.sim_num AS number,
+                                users.user_id AS id,
+                                contact_hierarchy.priority,
+                                user_mobile.mobile_status AS status
+                        FROM
+                            users
+                        INNER JOIN user_organization ON users.user_id = user_organization.user_id
+                        LEFT JOIN contact_hierarchy ON contact_hierarchy.fk_user_id = users.user_id
+                        RIGHT JOIN sites ON sites.site_id = user_organization.fk_site_id
+                        RIGHT JOIN user_mobile ON user_mobile.user_id = users.user_id UNION SELECT 
+                            UPPER(CONCAT(dewsl_teams.team_name, ' - ', users.salutation, ' ', users.lastname, ', ', users.firstname)) AS fullname,
+                                user_mobile.sim_num AS number,
+                                users.user_id AS id,
+                                contact_hierarchy.priority,
+                                user_mobile.mobile_status AS status
+                        FROM
+                            users
+                        INNER JOIN dewsl_team_members ON users.user_id = dewsl_team_members.users_users_id
+                        LEFT JOIN contact_hierarchy ON contact_hierarchy.fk_user_id = users.user_id
+                        RIGHT JOIN dewsl_teams ON dewsl_team_members.dewsl_teams_team_id = dewsl_teams.team_id
+                        RIGHT JOIN user_mobile ON user_mobile.user_id = users.user_id) AS fullcontact
+                    WHERE
+                        status = 1 and fullname LIKE '%$queryName%' or id LIKE '%$queryName%'";
 
             $this->checkConnectionDB($sql);
             $result = $this->dbconn->query($sql);
@@ -403,6 +430,8 @@ class ChatMessageModel {
                     $dbreturn[$ctr]['fullname'] = $this->convertNameToUTF8($row['fullname']);
                     $dbreturn[$ctr]['id'] = $row['id'];
                     $dbreturn[$ctr]['number'] = $row['number'];
+                    $dbreturn[$ctr]['priority'] = $row['priority'];
+                    $dbreturn[$ctr]['status'] = $row['status'];
                     $ctr = $ctr + 1;
                 }
 
