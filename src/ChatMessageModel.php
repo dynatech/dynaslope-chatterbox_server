@@ -340,7 +340,6 @@ class ChatMessageModel {
             $full_data['type'] = 'allUnregisteredNumbers';
             $all_unregistered = [];
             $counter = 0;
-
             if($unregistered_result->num_rows > 0){
                 while ($row = $unregistered_result->fetch_assoc()) {
                     $normalized_number = "63".substr($row["sim_num"], -10);
@@ -396,7 +395,7 @@ class ChatMessageModel {
                                 user_mobile.sim_num AS number,
                                 users.user_id AS id,
                                 contact_hierarchy.priority,
-                                user_mobile.mobile_status AS status
+                                user_mobile.mobile_status AS status, users.status as user_status
                         FROM
                             users
                         INNER JOIN user_organization ON users.user_id = user_organization.user_id
@@ -407,7 +406,7 @@ class ChatMessageModel {
                                 user_mobile.sim_num AS number,
                                 users.user_id AS id,
                                 contact_hierarchy.priority,
-                                user_mobile.mobile_status AS status
+                                user_mobile.mobile_status AS status, users.status as user_status
                         FROM
                             users
                         INNER JOIN dewsl_team_members ON users.user_id = dewsl_team_members.users_users_id
@@ -415,7 +414,7 @@ class ChatMessageModel {
                         RIGHT JOIN dewsl_teams ON dewsl_team_members.dewsl_teams_team_id = dewsl_teams.team_id
                         RIGHT JOIN user_mobile ON user_mobile.user_id = users.user_id) AS fullcontact
                     WHERE
-                        status = 1 and fullname LIKE '%$queryName%' or id LIKE '%$queryName%'";
+                        status = 1 and user_status = 1 and (fullname LIKE '%$queryName%' or id LIKE '%$queryName%')";
 
             $this->checkConnectionDB($sql);
             $result = $this->dbconn->query($sql);
@@ -2048,7 +2047,7 @@ class ChatMessageModel {
                 }
             }
 
-            $mobile_data_query = "SELECT * FROM user_organization INNER JOIN users ON user_organization.user_id = users.user_id INNER JOIN user_ewi_status ON user_organization.user_id = user_ewi_status.users_id INNER JOIN user_mobile ON user_mobile.user_id = users.user_id INNER JOIN sites ON sites.site_id = '".$site."' WHERE user_ewi_status.status = '1' AND ".$site_office_query.";";
+            $mobile_data_query = "SELECT * FROM user_organization INNER JOIN users ON user_organization.user_id = users.user_id INNER JOIN user_ewi_status ON user_organization.user_id = user_ewi_status.users_id INNER JOIN user_mobile ON user_mobile.user_id = users.user_id INNER JOIN sites ON sites.site_id = '".$site."' WHERE user_ewi_status.status = '1' AND (".$site_office_query.");";
 
             $mobile_number = $this->dbconn->query($mobile_data_query);
             while ($row = $mobile_number->fetch_assoc()) {
