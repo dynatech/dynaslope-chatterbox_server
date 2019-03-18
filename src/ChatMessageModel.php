@@ -1833,6 +1833,7 @@ class ChatMessageModel {
             $full_data['recipients'] = $mobile_number;
             $full_data['type'] = "loadSmsConversation";
             $full_data['data'] = $inbox_outbox_collection;
+            var_dump($mobile_number);
             return $full_data;
         } catch(Exception $e) {
             $report = $this->ais_instance->aisSendReport($e->getMessage(),0);
@@ -2012,7 +2013,6 @@ class ChatMessageModel {
             } else {
                 $mobile_number_query = "SELECT * FROM users NATURAL JOIN user_mobile WHERE mobile_id = '".$details->mobile_id."';";
             }
-
             $mobile_number = $this->dbconn->query($mobile_number_query);
             if ($mobile_number->num_rows != 0) {
                 while ($row = $mobile_number->fetch_assoc()) {
