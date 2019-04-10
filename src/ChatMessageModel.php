@@ -83,13 +83,13 @@ class ChatMessageModel {
         try {
             $countNum = strlen($contactNumber);
             if ($countNum == 11) {
-                echo $contactNumber . " | ";
+                // echo $contactNumber . " | ";
                 $curSimPrefix = substr($contactNumber, 2, 2);
-                echo $curSimPrefix . " | ";
+                // echo $curSimPrefix . " | ";
             } elseif ($countNum == 12) {
-                echo $contactNumber . " | ";
+                // echo $contactNumber . " | ";
                 $curSimPrefix = substr($contactNumber, 3, 2);
-                echo $curSimPrefix . " | ";
+                // echo $curSimPrefix . " | ";
             }
 
             $networkSmart = ['00','07','08','09','10','11','12','14','18','19','20','21','22','23','24','25','28','29','30','31',
@@ -1773,7 +1773,7 @@ class ChatMessageModel {
 
     function getMessageConversations($details, $limit = 20) {
         try {
-            var_dump($details);
+            // var_dump($details);
             $inbox_outbox_collection = [];
             $temp_timestamp = [];
             $sorted_sms = [];
@@ -1812,12 +1812,12 @@ class ChatMessageModel {
                             smsinbox_users.ts_sms as ts_received, null as ts_written, null as ts_sent, smsinbox_users.sms_msg,
                             smsinbox_users.read_status, smsinbox_users.web_status, smsinbox_users.gsm_id ,
                             null as send_status , ts_sms as timestamp , '".$details['full_name']."' as user from smsinbox_users WHERE ".$inbox_builder." ";
-            echo $inbox_query;
-            echo " | ";                           
+            // echo $inbox_query;
+            // echo " | ";                           
             $outbox_query = "SELECT smsoutbox_users.outbox_id as convo_id, mobile_id,
                             null as ts_received, ts_written, ts_sent, sms_msg , null as read_status,
                             web_status, gsm_id , send_status , ts_written as timestamp, 'You' as user FROM smsoutbox_users INNER JOIN smsoutbox_user_status ON smsoutbox_users.outbox_id = smsoutbox_user_status.outbox_id WHERE ".$outbox_builder."";
-            echo $outbox_query;
+            // echo $outbox_query;
             $full_query = "SELECT * FROM (".$inbox_query." UNION ".$outbox_query.") as full_contact group by timestamp order by timestamp desc limit 20;";
             // echo $full_query;
             $fetch_convo = $this->dbconn->query($full_query);
@@ -1840,7 +1840,7 @@ class ChatMessageModel {
             $full_data['recipients'] = $mobile_number;
             $full_data['type'] = "loadSmsConversation";
             $full_data['data'] = $inbox_outbox_collection;
-            var_dump($full_data['recipients']);
+            // var_dump($full_data['recipients']);
             return $full_data;
         } catch(Exception $e) {
             $report = $this->ais_instance->aisSendReport($e->getMessage(),0);

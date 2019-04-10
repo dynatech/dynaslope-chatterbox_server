@@ -76,28 +76,28 @@ class ChatterBox implements MessageComponentInterface {
                 $from->send(json_encode($exchanges));
             } else if ($msgType == "updateDewslContact") {
                 $data = $decodedText->data;
-                var_dump($data);
+                // var_dump($data);
                 $exchanges = $this->chatModel->updateDwslContact($data);
                 $namesuggestions = $this->chatModel->getContactSuggestions();
                 $from->send(json_encode($namesuggestions));
                 $from->send(json_encode($exchanges));
             } else if ($msgType == "updateCommunityContact") {
                 $data = $decodedText->data;
-                var_dump($data);
+                // var_dump($data);
                 $exchanges = $this->chatModel->updateCmmtyContact($data);
                 $namesuggestions = $this->chatModel->getContactSuggestions();
                 $from->send(json_encode($namesuggestions));
                 $from->send(json_encode($exchanges));
             } else if ($msgType == "newDewslContact") {
                 $data = $decodedText->data;
-                var_dump($data);
+                // var_dump($data);
                 $exchanges = $this->chatModel->createDwlsContact($data);
                 $namesuggestions = $this->chatModel->getContactSuggestions();
                 $from->send(json_encode($namesuggestions));
                 $from->send(json_encode($exchanges));
             } else if ($msgType == "newCommunityContact") {
                 $data = $decodedText->data;
-                var_dump($data);
+                // var_dump($data);
                 $exchanges = $this->chatModel->createCommContact($data);
                 $namesuggestions = $this->chatModel->getContactSuggestions();
                 $from->send(json_encode($namesuggestions));
@@ -150,7 +150,7 @@ class ChatterBox implements MessageComponentInterface {
                 $from->send(json_encode($exchanges));
             } else if ($msgType == "loadSmsConversation") {
                 $last_name = null;
-                var_dump($decodedText->data);
+                // var_dump($decodedText->data);
                 if (isset($decodedText->data->isMultiple) && $decodedText->data->isMultiple == true) {
                     $exchanges = $this->chatModel->getMessageConversationsForMultipleContact($decodedText->data->data);
                 } else {
