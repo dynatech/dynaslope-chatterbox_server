@@ -2054,7 +2054,7 @@ class ChatMessageModel {
                 }
             }
 
-            $mobile_data_query = "SELECT * FROM user_organization INNER JOIN users ON user_organization.user_id = users.user_id INNER JOIN user_ewi_status ON user_organization.user_id = user_ewi_status.users_id INNER JOIN user_mobile ON user_mobile.user_id = users.user_id INNER JOIN sites ON sites.site_id = '".$site."' WHERE user_ewi_status.status = '1' AND (".$site_office_query.");";
+            $mobile_data_query = "SELECT * FROM user_organization INNER JOIN users ON user_organization.user_id = users.user_id INNER JOIN user_ewi_status ON user_organization.user_id = user_ewi_status.users_id INNER JOIN user_mobile ON user_mobile.user_id = users.user_id INNER JOIN sites ON sites.site_id = '".$site."' WHERE user_ewi_status.status = '1' AND users.status = '1' AND (".$site_office_query.");";
 
             $mobile_number = $this->dbconn->query($mobile_data_query);
             while ($row = $mobile_number->fetch_assoc()) {
