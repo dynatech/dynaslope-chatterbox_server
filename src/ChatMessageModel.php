@@ -1014,7 +1014,7 @@ class ChatMessageModel {
         $query_contact_info = "UPDATE users SET firstname='$data->firstname',lastname='$data->lastname',middlename='$data->middlename',nickname='$data->nickname',salutation='$data->salutation',birthday='$data->birthdate',sex='$data->gender',status=$data->contact_active_status WHERE user_id = $data->user_id;";
         $result = $this->dbconn->query($query_contact_info);
         if ($result == true) {
-            if (sizeof($data->numbers) == 0) {
+            if (sizeof($data->numbers) == 0) {  
                 try {
                     $num_exist = "DELETE FROM user_mobile WHERE user_id='".$data->user_id."'";
                     $result = $this->dbconn->query($num_exist);
@@ -1519,7 +1519,7 @@ class ChatMessageModel {
         for ($counter = 0; $counter < sizeof($site_details); $counter++) {
             for ($sub_counter = 0; $sub_counter < sizeof($org_details); $sub_counter++) {
                 try {
-                    $insert_org = "INSERT INTO user_organization VALUES (0,'".$data->id."','".$site_details[$counter]['site_id']."','".$org_details[$sub_counter]['org_name']."','".$org_details[$sub_counter]['org_id']."')";
+                    $insert_org = "INSERT INTO user_organization VALUES (0,'".$data->id."','".$site_details[$counter]['site_id']."','".$org_details[$sub_counter]['org_name']."','".$org_details[$sub_counter]['org_scope']."')";
                     $result_org = $this->dbconn->query($insert_org);
                 } catch (Exception $e) {
                     $flag = false;
