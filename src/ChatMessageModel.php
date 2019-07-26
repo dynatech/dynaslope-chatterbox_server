@@ -1823,7 +1823,13 @@ class ChatMessageModel {
             $fetch_convo = $this->dbconn->query($full_query);
             if ($fetch_convo->num_rows != 0) {
                 while($row = $fetch_convo->fetch_assoc()) {
-                    $tag = $this->fetchSmsTags($row['convo_id']);
+                    $table_used = '';
+                    if($row['user'] == "You"){
+                        $table_used = "smsoutbox_users"
+                    }else{
+                        $table_used = "smsinbox_users"
+                    }
+                    $tag = $this->fetchSmsTags($row['convo_id'], $table_used);
                     if (sizeOf($tag['data']) == 0) {
                         $row['hasTag'] = 0;
                     } else {
@@ -1886,7 +1892,13 @@ class ChatMessageModel {
             $fetch_convo = $this->dbconn->query($full_query);
             if ($fetch_convo->num_rows != 0) {
                 while($row = $fetch_convo->fetch_assoc()) {
-                    $tag = $this->fetchSmsTags($row['convo_id']);
+                    $table_used = '';
+                    if($row['user'] == "You"){
+                        $table_used = "smsoutbox_users"
+                    }else{
+                        $table_used = "smsinbox_users"
+                    }
+                    $tag = $this->fetchSmsTags($row['convo_id'], $table_used);
                     if (sizeOf($tag['data']) == 0) {
                         $row['hasTag'] = 0;
                     } else {
@@ -1947,7 +1959,13 @@ class ChatMessageModel {
             $fetch_convo = $this->dbconn->query($full_query);
             if ($fetch_convo->num_rows != 0) {
                 while($row = $fetch_convo->fetch_assoc()) {
-                    $tag = $this->fetchSmsTags($row['convo_id']);
+                    $table_used = '';
+                    if($row['user'] == "You"){
+                        $table_used = "smsoutbox_users"
+                    }else{
+                        $table_used = "smsinbox_users"
+                    }
+                    $tag = $this->fetchSmsTags($row['convo_id'], $table_used);
                     if (sizeOf($tag['data']) == 0) {
                         $row['hasTag'] = 0;
                     } else {
@@ -2373,11 +2391,11 @@ class ChatMessageModel {
         }
     }
 
-    function fetchSmsTags($sms_id) {
+    function fetchSmsTags($sms_id, $table_used) {
         try {
             $tags = [];
             $tags_information = [];
-            $get_tags_query = "SELECT * FROM gintags INNER JOIN gintags_reference ON tag_id_fk = gintags_reference.tag_id WHERE table_element_id = '".$sms_id."';";
+            $get_tags_query = "SELECT * FROM gintags INNER JOIN gintags_reference ON tag_id_fk = gintags_reference.tag_id WHERE table_element_id = '".$sms_id."' AND table_used = '".$table_used."';";
             $execute_query = $this->dbconn->query($get_tags_query);
             if ($execute_query->num_rows > 0) {
                 while ($row = $execute_query->fetch_assoc()) {
