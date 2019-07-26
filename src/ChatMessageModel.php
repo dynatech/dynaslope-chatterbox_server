@@ -1825,9 +1825,9 @@ class ChatMessageModel {
                 while($row = $fetch_convo->fetch_assoc()) {
                     $table_used = '';
                     if($row['user'] == "You"){
-                        $table_used = "smsoutbox_users"
+                        $table_used = "smsoutbox_users";
                     }else{
-                        $table_used = "smsinbox_users"
+                        $table_used = "smsinbox_users";
                     }
                     $tag = $this->fetchSmsTags($row['convo_id'], $table_used);
                     if (sizeOf($tag['data']) == 0) {
@@ -1894,9 +1894,9 @@ class ChatMessageModel {
                 while($row = $fetch_convo->fetch_assoc()) {
                     $table_used = '';
                     if($row['user'] == "You"){
-                        $table_used = "smsoutbox_users"
+                        $table_used = "smsoutbox_users";
                     }else{
-                        $table_used = "smsinbox_users"
+                        $table_used = "smsinbox_users";
                     }
                     $tag = $this->fetchSmsTags($row['convo_id'], $table_used);
                     if (sizeOf($tag['data']) == 0) {
@@ -1961,9 +1961,9 @@ class ChatMessageModel {
                 while($row = $fetch_convo->fetch_assoc()) {
                     $table_used = '';
                     if($row['user'] == "You"){
-                        $table_used = "smsoutbox_users"
+                        $table_used = "smsoutbox_users";
                     }else{
-                        $table_used = "smsinbox_users"
+                        $table_used = "smsinbox_users";
                     }
                     $tag = $this->fetchSmsTags($row['convo_id'], $table_used);
                     if (sizeOf($tag['data']) == 0) {
