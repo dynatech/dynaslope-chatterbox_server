@@ -2391,11 +2391,16 @@ class ChatMessageModel {
         }
     }
 
-    function fetchSmsTags($sms_id, $table_used) {
+    function fetchSmsTags($sms_id, $table_used=null) {
         try {
             $tags = [];
             $tags_information = [];
-            $get_tags_query = "SELECT * FROM gintags INNER JOIN gintags_reference ON tag_id_fk = gintags_reference.tag_id WHERE table_element_id = '".$sms_id."' AND table_used = '".$table_used."';";
+            if($table_used==null){
+                $get_tags_query = "SELECT * FROM gintags INNER JOIN gintags_reference ON tag_id_fk = gintags_reference.tag_id WHERE table_element_id = '".$sms_id."';";
+            }else{
+                $get_tags_query = "SELECT * FROM gintags INNER JOIN gintags_reference ON tag_id_fk = gintags_reference.tag_id WHERE table_element_id = '".$sms_id."' AND table_used = '".$table_used."';";
+            }
+            
             $execute_query = $this->dbconn->query($get_tags_query);
             if ($execute_query->num_rows > 0) {
                 while ($row = $execute_query->fetch_assoc()) {
