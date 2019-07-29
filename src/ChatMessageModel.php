@@ -2391,7 +2391,7 @@ class ChatMessageModel {
         }
     }
 
-    function fetchSmsTags($sms_id, $table_used==null) {
+    function fetchSmsTags($sms_id, $table_used=null) {
         try {
             $tags = [];
             $tags_information = [];
