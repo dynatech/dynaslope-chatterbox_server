@@ -246,7 +246,14 @@ class ChatterBox implements MessageComponentInterface {
                 $from->send(json_encode($exchanges));
             } else if ($msgType == "getSmsTags") {
                 echo "Fetching tags for the specified sms_id.\n";
-                $exchanges = $this->chatModel->fetchSmsTags($decodedText->data);
+                $convo_user = $decodedText->convo_user;
+                $table_used = "";
+                if($convo_user == "You"){
+                    $table_used = "smsoutbox_users";
+                }else{
+                    $table_used = "smsinbox_users";
+                }
+                $exchanges = $this->chatModel->fetchSmsTags($decodedText->data,$table_used);
                 $exchanges['sites'] = $this->chatModel->getUserAndSiteAssociationViaMobile_id($decodedText->mobile_id);
                 $from->send(json_encode($exchanges));
             } else if ($msgType == "deleteTags") {
@@ -256,6 +263,7 @@ class ChatterBox implements MessageComponentInterface {
             } else if ($msgType == "getRoutineSites") {
                 echo "Fetching Sites for Routine";
                 $exchanges = $this->chatModel->fetchSitesForRoutine();
+		var_dump($exchanges);
                 $from->send(json_encode($exchanges));
             } else if ($msgType == "getRoutineReminder") {
                 echo "Fetching Routine Template.\n";
@@ -561,7 +569,11 @@ class ChatterBox implements MessageComponentInterface {
                     }
                 }
                 $from->send(json_encode($exchanges));
-            } else {
+            } else if ($msgType == "sendRainInfo") {
+		$exchanges = $this->chatModel->sendSms($decodedText->recipients,$decodedText->message);
+                               
+                $from->send(json_encode($exchanges));		    
+	    }else {
                 echo "Message will be ignored\n";
             }
         }

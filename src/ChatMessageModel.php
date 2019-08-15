@@ -2396,8 +2396,10 @@ class ChatMessageModel {
             $tags = [];
             $tags_information = [];
             if($table_used==null){
+                echo "null";
                 $get_tags_query = "SELECT * FROM gintags INNER JOIN gintags_reference ON tag_id_fk = gintags_reference.tag_id WHERE table_element_id = '".$sms_id."';";
             }else{
+                echo "with table";
                 $get_tags_query = "SELECT * FROM gintags INNER JOIN gintags_reference ON tag_id_fk = gintags_reference.tag_id WHERE table_element_id = '".$sms_id."' AND table_used = '".$table_used."';";
             }
             
